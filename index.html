@@ -19,7 +19,7 @@
           pushCode,
           {
             greetings: "Welcome to the Pyodide terminal emulator 🐍",
-            prompt: "[[;red;]>>> ]"
+            prompt: "[[;grey;]>>> ]"
           }
         );
 
@@ -42,7 +42,7 @@
           if (result) {
             term.set_prompt('[[;gray;]... ]')
           } else {
-            term.set_prompt('[[;red;]>>> ]')
+            term.set_prompt('[[;grey;]>>> ]')
             var stderr = pyodide.runPython("sys.stderr.getvalue()").trim()
             if (stderr) {
               term.echo(`[[;red;]${stderr}]`)
