@@ -16,11 +16,22 @@
             push(line)
         }
 
+        let pushLineNoRun = function() {
+            // push the current line, and ensure the buffer isn't executed.
+            let cmd = term.get_command();
+            term.set_command('');
+            set_try_run(false);
+            term.exec(cmd, false)
+        }
+
         var term = $('body').terminal(
           pushCode,
           {
             greetings: "Welcome to the Pyodide terminal emulator 🐍",
-            prompt: "[[;grey;]>>> ]"
+            prompt: "[[;grey;]>>> ]",
+            keymap: {
+                "SHIFT+ENTER": (e, orig) => pushLineNoRun(),
+            }
           }
         );
 
@@ -30,6 +41,7 @@
         from js import term, pyodide
         
         buffer = []
+        try_run = True;
 
         class StringIORedirect(io.StringIO):
             """ StringIO, but everything is echoed to the terminal."""
@@ -46,22 +58,28 @@
         sys.stdout = StringIORedirect()
         sys.stderr = StringIORedirect('red')
 
+        def _set_try_run(val):
+            global try_run
+            try_run = val
+
         def _push(line):
             """Add line of code to buffer and execute it if ready."""
             buffer.append(line)
             
-            # Always exec if final line is blank.
-            if line == "":
-                return exec_buffer()
-            
-            # Exec on single line input 
-            if len(buffer) == 1:
-                try:
-                    if code.compile_command(line):
-                        return exec_buffer()
-                except (OverflowError, SyntaxError, ValueError):
-                    pass  # Allow these to occur when the user executes the code.
+            if try_run:
+                # Always exec if final line is blank.
+                if line == "":
+                    return exec_buffer()
+                
+                # Exec on single line input 
+                if len(buffer) == 1:
+                    try:
+                        if code.compile_command(line):
+                            return exec_buffer()
+                    except (OverflowError, SyntaxError, ValueError):
+                        pass  # Allow these to occur when the user executes the code.
 
+            _set_try_run(True)  # Always default back to true for next input.
             # More input expected, set prompt accordingly.
             term.set_prompt('[[;gray;]... ]')
 
@@ -76,6 +94,7 @@
         `)
 
         var push = pyodide.pyimport('_push')
+        var set_try_run = pyodide.pyimport('_set_try_run')
 
         term.runPython = function(code, display) {
           if(DEBUG) {console.log(code)};
@@ -97,6 +116,7 @@
         }
 
         term.handlePythonError = function(result) {
+          if (DEBUG) {console.log("term error result")}
           term.error(result.toString())
         }
         
