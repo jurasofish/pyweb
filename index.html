@@ -10,9 +10,10 @@
   </head>
   <body>
     <script>
+      let DEBUG = true;
       languagePluginLoader.then(() => {
         function pushCode(line) {
-          handleResult(c.push(line))
+            push(line)
         }
 
         var term = $('body').terminal(
@@ -24,56 +25,77 @@
         );
 
         window.term = term;
-        pyodide.runPython(`
-          import io, code, sys
-          from js import term, pyodide
+        pyodide.runPython(String.raw`
+        import io, code, sys
+        from js import term, pyodide
+        
+        buffer = []
 
-          class Console(code.InteractiveConsole):
-              def runcode(self, code):
-                  sys.stdout = io.StringIO()
-                  sys.stderr = io.StringIO()
-                  term.runPython("\\n".join(self.buffer))
-          _c = Console(locals=globals())
+        class StringIORedirect(io.StringIO):
+            """ StringIO, but everything is echoed to the terminal."""
+            def write(self, *args, **kwargs):
+                # super().write(*args, **kwargs)
+                term.echo(args[0])
+        
+        sys.stdout = StringIORedirect()
+        sys.stderr = StringIORedirect()
+
+        def _push(line):
+            """Add line of code to buffer and execute it if ready."""
+            buffer.append(line)
+            
+            # Always exec if final line is blank.
+            if line == "":
+                return exec_buffer()
+            
+            # Exec on single line input 
+            if len(buffer) == 1:
+                try:
+                    if code.compile_command(line):
+                        return exec_buffer()
+                except (OverflowError, SyntaxError, ValueError):
+                    pass  # Allow these to occur when the user executes the code.
+
+            # More input expected, set prompt accordingly.
+            term.set_prompt('[[;gray;]... ]')
+
+
+        def exec_buffer():
+            """ Execute and clear the buffer. """
+            code_str = "\n".join(buffer)
+            display = len(buffer)==1  # Only display if code is a single line.
+            buffer.clear()
+            term.set_prompt('[[;grey;]>>> ]')
+            term.runPython(code_str, display)
         `)
 
-        var c = pyodide.pyimport('_c')
+        var push = pyodide.pyimport('_push')
 
-        function handleResult(result) {
-          if (result) {
-            term.set_prompt('[[;gray;]... ]')
-          } else {
-            term.set_prompt('[[;grey;]>>> ]')
-            var stderr = pyodide.runPython("sys.stderr.getvalue()").trim()
-            if (stderr) {
-              term.echo(`[[;red;]${stderr}]`)
-            } else {
-              var stdout = pyodide.runPython("sys.stdout.getvalue()")
-              if (stdout) {
-                term.echo(stdout.trim())
-              }
-            }
-          }
-        }
-
-        term.runPython = function(code) {
+        term.runPython = function(code, display) {
+          if(DEBUG) {console.log(code)};
           pyodide.runPythonAsync(code).then(
-            term.handlePythonResult, term.handlePythonError
+            (r) => term.displayExpressionResult(r, display), term.handlePythonError
           )
         }
-
-        term.handlePythonResult = function(result) {
-          if (result === undefined) {
-            return
-          } else if (result['_repr_html_'] !== undefined) {
-            term.echo(result['_repr_html_'], {raw: true})
-          } else {
-            term.echo(result.toString())
+        
+        term.displayExpressionResult = function(result, display) {
+          if (display) {
+            if (result === undefined) {
+                    return
+                } else if (result['_repr_html_'] !== undefined) {
+                    term.echo(result['_repr_html_'], {raw: true})
+                } else {
+                    term.echo(result.toString())
+            }
           }
         }
 
         term.handlePythonError = function(result) {
           term.error(result.toString())
         }
+        
+        // automate input to terminal:
+        // term.exec("print(1)", false)
       });
     </script>
   </body>
