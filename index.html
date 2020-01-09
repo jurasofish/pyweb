@@ -33,12 +33,18 @@
 
         class StringIORedirect(io.StringIO):
             """ StringIO, but everything is echoed to the terminal."""
+            def __init__(self, colour=None, *args, **kwargs):
+                self.colour = colour
+                super().__init__(*args, **kwargs)
             def write(self, *args, **kwargs):
                 # super().write(*args, **kwargs)
-                term.echo(args[0])
+                if self.colour is None:
+                    term.echo(args[0])
+                else:
+                    term.echo(f"[[;{self.colour};]{args[0]}]")
         
         sys.stdout = StringIORedirect()
-        sys.stderr = StringIORedirect()
+        sys.stderr = StringIORedirect('red')
 
         def _push(line):
             """Add line of code to buffer and execute it if ready."""
