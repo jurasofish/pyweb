@@ -30,6 +30,11 @@
           {
             greetings: "Welcome to the Pyodide terminal emulator 🐍",
             prompt: "[[;grey;]>>> ]",
+            exceptionHandler: (e) => {
+                console.log(e.message);
+                console.log(e.stack);
+                term.error(e.message);
+            },
             keymap: {
                 "SHIFT+ENTER": (e, orig) => pushLineNoRun(),
                 "BACKSPACE": (e, orig) => {
