@@ -44,7 +44,7 @@
                         orig();  // Normal backspace if there are characters.
                     } else {
                         let buffer_len = get_buffer_len();
-                        if (buffer_len == 0) {return}; 
+                        if (buffer_len == 0) {return};
                         term.remove_line(-1);
                         let new_cmd = pop();
                         term.set_command(new_cmd)
