@@ -90,8 +90,11 @@
 
         window.term = term;
         pyodide.runPython(String.raw`
-        import io, code, sys
-        from js import term, pyodide, console
+        import io
+        import code
+        import sys
+        from js import term, pyodide as pyodidejs, console
+        import pyodide
         
         _buffer = []
         _try_run = True
