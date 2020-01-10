@@ -74,7 +74,7 @@
         window.term = term;
         pyodide.runPython(String.raw`
         import io, code, sys
-        from js import term, pyodide
+        from js import term, pyodide, console
         
         _buffer = []
         _try_run = True
