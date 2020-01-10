@@ -109,8 +109,8 @@
             _buffer.append(line)
             
             if _try_run:
-                # Always exec if final line is blank.
-                if line == "":
+                # Always exec if final line is whitespace.
+                if line.strip() == "":
                     return _exec_buffer()
                 
                 # Exec on single line input 
