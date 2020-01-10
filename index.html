@@ -125,6 +125,9 @@
         def _get_buffer_len():
             return len(_buffer)
         
+        def _pop():
+            return _buffer.pop()
+        
         def _clear_buffer():
             _buffer.clear()
 
@@ -148,9 +151,6 @@
             _set_try_run(True)  # Always default back to true for next input.
             # More input expected, set prompt accordingly.
             term.set_prompt('[[;gray;]... ]')
-        
-        def _pop():
-            return _buffer.pop()
 
 
         def _exec_buffer():
