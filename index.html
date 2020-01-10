@@ -95,7 +95,8 @@
                 term.update(-1, f"[[;{self.colour};]{self.line_buffer}]")
         
         sys.stdout = _StringIORedirect()
-        sys.stderr = _StringIORedirect('red')
+        # sys.stderr = _StringIORedirect('red')
+        sys.stderr = sys.stdout
 
         def _set_try_run(val):
             global _try_run
