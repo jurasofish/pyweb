@@ -20,6 +20,7 @@
             // push the current line, and ensure the buffer isn't executed.
             let cmd = term.get_command();
             term.set_command('');
+            term.history().append(cmd);
             set_try_run(false);
             term.exec(cmd, false)
         }
