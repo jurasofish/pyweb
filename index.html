@@ -11,9 +11,26 @@
   <body>
     <script>
       let DEBUG = true;
+      let RUNNING = false;
+
+      function __delay__(timer) {
+            // Delay for timer milliseconds
+            // https://stackoverflow.com/a/51212718/8899565
+            return new Promise(resolve => {
+                timer = timer || 2000;
+                setTimeout(function () {
+                    resolve();
+                }, timer);
+            });
+        };
+
       languagePluginLoader.then(() => {
-        function pushCode(line) {
-            push(line)
+        async function pushCode(line) {
+            push(line);
+            // Imports might still be running at this point.
+            // todo maybe have an error after a certain amount of time.
+            while (RUNNING)
+                await __delay__(5);
         }
 
         let pushLineNoRun = function() {
@@ -152,12 +169,14 @@
 
         term.runPython = function(code, display) {
           if(DEBUG) {console.log(code)};
+          RUNNING = true;
           pyodide.runPythonAsync(code).then(
             (r) => term.displayExpressionResult(r, display), term.handlePythonError
           )
         }
         
         term.displayExpressionResult = function(result, display) {
+          RUNNING = false;
           if (display) {
             if (result === undefined) {
                     return
@@ -170,6 +189,7 @@
         }
 
         term.handlePythonError = function(result) {
+          RUNNING = false;
           if (DEBUG) {console.log("term error result")}
           term.error(result.toString())
         }
