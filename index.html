@@ -53,6 +53,20 @@
                         }
                     }
                 },
+                "CTRL+C": (e, orig) => {
+                    // Cancel current input.
+                    let cmd = term.get_command();
+                    term.insert('^C');
+                    let cancelled_line = term.get_prompt() + term.get_command();
+                    if (cmd.trim().length > 0){
+                        term.history().append(term.get_command());
+                    }
+                    clear_buffer();
+                    term.set_command('');
+                    term.exec('', false);
+                    term.update(-1, cancelled_line);
+                    console.log(cancelled_line)
+                }
             }
           }
         );
@@ -86,6 +100,9 @@
 
         def _get_buffer_len():
             return len(_buffer)
+        
+        def _clear_buffer():
+            _buffer.clear()
 
         def _push(line):
             """Add line of code to buffer and execute it if ready."""
@@ -125,6 +142,7 @@
         var set_try_run = pyodide.pyimport('_set_try_run')
         var get_buffer_len = pyodide.pyimport('_get_buffer_len')
         var pop = pyodide.pyimport('_pop')
+        var clear_buffer = pyodide.pyimport('_clear_buffer')
 
         term.runPython = function(code, display) {
           if(DEBUG) {console.log(code)};
