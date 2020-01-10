@@ -31,6 +31,22 @@
             prompt: "[[;grey;]>>> ]",
             keymap: {
                 "SHIFT+ENTER": (e, orig) => pushLineNoRun(),
+                "BACKSPACE": (e, orig) => {
+                    // Allow backspace to remove a line.
+                    let cmd = term.get_command();
+                    if (cmd.length > 0) {
+                        orig();  // Normal backspace if there are characters.
+                    } else {
+                        let buffer_len = get_buffer_len();
+                        if (buffer_len == 0) {return}; 
+                        term.remove_line(-1);
+                        let new_cmd = pop();
+                        term.set_command(new_cmd)
+                        if (buffer_len == 1) {
+                            term.set_prompt('[[;gray;]>>> ]');
+                        }
+                    }
+                },
             }
           }
         );
@@ -62,6 +78,9 @@
             global try_run
             try_run = val
 
+        def _get_buffer_len():
+            return len(buffer)
+
         def _push(line):
             """Add line of code to buffer and execute it if ready."""
             buffer.append(line)
@@ -82,6 +101,9 @@
             _set_try_run(True)  # Always default back to true for next input.
             # More input expected, set prompt accordingly.
             term.set_prompt('[[;gray;]... ]')
+        
+        def _pop():
+            return buffer.pop()
 
 
         def exec_buffer():
@@ -95,6 +117,8 @@
 
         var push = pyodide.pyimport('_push')
         var set_try_run = pyodide.pyimport('_set_try_run')
+        var get_buffer_len = pyodide.pyimport('_get_buffer_len')
+        var pop = pyodide.pyimport('_pop')
 
         term.runPython = function(code, display) {
           if(DEBUG) {console.log(code)};
