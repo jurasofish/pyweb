@@ -83,13 +83,16 @@
             """ StringIO, but everything is echoed to the terminal."""
             def __init__(self, colour='', *args, **kwargs):
                 self.colour = colour
+                self.line_buffer = ''
                 super().__init__(*args, **kwargs)
             def write(self, *args, **kwargs):
                 # super().write(*args, **kwargs)
-                if self.colour is None:
-                    term.echo(args[0])
-                else:
-                    term.echo(f"[[;{self.colour};]{args[0]}]")
+
+                # Start a new line if there isn't one already
+                if not self.line_buffer:
+                    term.echo('')
+                self.line_buffer += args[0]
+                term.update(-1, f"[[;{self.colour};]{self.line_buffer}]")
         
         sys.stdout = StringIORedirect()
         sys.stderr = StringIORedirect('red')
@@ -131,6 +134,8 @@
 
         def _exec_buffer():
             """ Execute and clear the buffer. """
+            sys.stdout.line_buffer = ''
+            sys.stderr.line_buffer = ''
             code_str = "\n".join(_buffer)
             display = len(_buffer)==1  # Only display if code is a single line.
             _buffer.clear()
