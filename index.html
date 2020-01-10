@@ -81,7 +81,7 @@
 
         class StringIORedirect(io.StringIO):
             """ StringIO, but everything is echoed to the terminal."""
-            def __init__(self, colour=None, *args, **kwargs):
+            def __init__(self, colour='', *args, **kwargs):
                 self.colour = colour
                 super().__init__(*args, **kwargs)
             def write(self, *args, **kwargs):
