@@ -62,8 +62,8 @@
         import io, code, sys
         from js import term, pyodide
         
-        buffer = []
-        try_run = True;
+        _buffer = []
+        _try_run = True;
 
         class StringIORedirect(io.StringIO):
             """ StringIO, but everything is echoed to the terminal."""
@@ -81,26 +81,26 @@
         sys.stderr = StringIORedirect('red')
 
         def _set_try_run(val):
-            global try_run
-            try_run = val
+            global _try_run
+            _try_run = val
 
         def _get_buffer_len():
-            return len(buffer)
+            return len(_buffer)
 
         def _push(line):
             """Add line of code to buffer and execute it if ready."""
-            buffer.append(line)
+            _buffer.append(line)
             
-            if try_run:
+            if _try_run:
                 # Always exec if final line is blank.
                 if line == "":
-                    return exec_buffer()
+                    return _exec_buffer()
                 
                 # Exec on single line input 
-                if len(buffer) == 1:
+                if len(_buffer) == 1:
                     try:
                         if code.compile_command(line):
-                            return exec_buffer()
+                            return _exec_buffer()
                     except (OverflowError, SyntaxError, ValueError):
                         pass  # Allow these to occur when the user executes the code.
 
@@ -109,14 +109,14 @@
             term.set_prompt('[[;gray;]... ]')
         
         def _pop():
-            return buffer.pop()
+            return _buffer.pop()
 
 
-        def exec_buffer():
+        def _exec_buffer():
             """ Execute and clear the buffer. """
-            code_str = "\n".join(buffer)
-            display = len(buffer)==1  # Only display if code is a single line.
-            buffer.clear()
+            code_str = "\n".join(_buffer)
+            display = len(_buffer)==1  # Only display if code is a single line.
+            _buffer.clear()
             term.set_prompt('[[;grey;]>>> ]')
             term.runPython(code_str, display)
         `)
