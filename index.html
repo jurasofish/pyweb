@@ -79,7 +79,7 @@
         _buffer = []
         _try_run = True
 
-        class StringIORedirect(io.StringIO):
+        class _StringIORedirect(io.StringIO):
             """ StringIO, but everything is echoed to the terminal."""
             def __init__(self, colour='', *args, **kwargs):
                 self.colour = colour
@@ -94,8 +94,8 @@
                 self.line_buffer += args[0]
                 term.update(-1, f"[[;{self.colour};]{self.line_buffer}]")
         
-        sys.stdout = StringIORedirect()
-        sys.stderr = StringIORedirect('red')
+        sys.stdout = _StringIORedirect()
+        sys.stderr = _StringIORedirect('red')
 
         def _set_try_run(val):
             global _try_run
