@@ -60,10 +60,10 @@
                     if (cmd.length > 0) {
                         orig();  // Normal backspace if there are characters.
                     } else {
-                        let buffer_len = get_buffer_len();
+                        let buffer_len = pyodide.runPython('len(_buffer)');
                         if (buffer_len == 0) {return};
                         term.remove_line(-1);
-                        let new_cmd = pop();
+                        let new_cmd = pyodide.runPython('_buffer.pop()');
                         term.set_command(new_cmd)
                         if (buffer_len == 1) {
                             term.set_prompt('[[;gray;]>>> ]');
@@ -78,7 +78,7 @@
                     if (cmd.trim().length > 0){
                         term.history().append(term.get_command());
                     }
-                    clear_buffer();
+                    pyodide.runPython('_buffer.clear()');
                     term.set_command('');
                     term.exec('', false);
                     term.update(-1, cancelled_line);
@@ -118,15 +118,6 @@
         # sys.stderr = _StringIORedirect('red')
         sys.stderr = sys.stdout
 
-        def _get_buffer_len():
-            return len(_buffer)
-        
-        def _pop():
-            return _buffer.pop()
-        
-        def _clear_buffer():
-            _buffer.clear()
-
         def _push(line):
             """Add line of code to buffer and execute it if ready."""
             _buffer.append(line)
@@ -165,9 +156,6 @@
         `)
 
         var push = pyodide.pyimport('_push')
-        var get_buffer_len = pyodide.pyimport('_get_buffer_len')
-        var pop = pyodide.pyimport('_pop')
-        var clear_buffer = pyodide.pyimport('_clear_buffer')
 
         term.runPython = function(code, display) {
           if(DEBUG) {console.log(code)};
