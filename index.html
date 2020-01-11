@@ -26,6 +26,25 @@
             });
         };
 
+        var loadPackageFlagged = function(packageName) {
+            // Load package into virtual filesystem and flag to console
+            // that code is running.
+            RUNNING = true;
+            REDIRECTCONSOLE = true;  // Display info/errors for user.
+            pyodide.loadPackage(packageName).then(
+                (r) => {
+                    RUNNING = false;
+                    REDIRECTCONSOLE = false;
+                    term.echo(r);
+                }, 
+                (r) => {
+                    RUNNING = false;
+                    REDIRECTCONSOLE = false;
+                    term.error(r);
+                }
+            );
+        }
+
       languagePluginLoader.then(() => {
         async function pushCode(line) {
             push(line);
