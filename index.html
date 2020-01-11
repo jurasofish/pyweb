@@ -166,33 +166,6 @@
         `)
 
         var push = pyodide.pyimport('_push')
-
-        term.runPython = function(code, display) {
-          if(DEBUG) {console.log(code)};
-          RUNNING = true;
-          pyodide.runPythonAsync(code).then(
-            (r) => term.displayExpressionResult(r, display), term.handlePythonError
-          )
-        }
-        
-        term.displayExpressionResult = function(result, display) {
-          RUNNING = false;
-          if (display) {
-            if (result === undefined) {
-                    return
-                } else if (result['_repr_html_'] !== undefined) {
-                    term.echo(result['_repr_html_'], {raw: true})
-                } else {
-                    term.echo(result.toString())
-            }
-          }
-        }
-
-        term.handlePythonError = function(result) {
-          RUNNING = false;
-          if (DEBUG) {console.log("term error result")}
-          term.error(result.toString())
-        }
       });
     </script>
   </body>
