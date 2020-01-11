@@ -161,7 +161,12 @@
             display = len(_buffer)==1  # Only display if code is a single line.
             _buffer.clear()
             term.set_prompt('[[;grey;]>>> ]')
-            term.runPython(code_str, display)
+            res = pyodide.eval_code(code_str, globals())
+            if display and res is not None:
+                if hasattr(res, '__repr__'):
+                    print(res.__repr__(), end='')
+                else:
+                    print(res, end='')
         `)
 
         var push = pyodide.pyimport('_push')
