@@ -12,6 +12,7 @@
     <script>
       let DEBUG = true;
       let RUNNING = false;
+      var TRY_RUN = true;  // If false the buffer will not be executed when pressing enter.
 
       function __delay__(timer) {
             // Delay for timer milliseconds
@@ -31,15 +32,7 @@
             // todo maybe have an error after a certain amount of time.
             while (RUNNING)
                 await __delay__(5);
-        }
-
-        let pushLineNoRun = function() {
-            // push the current line, and ensure the buffer isn't executed.
-            let cmd = term.get_command();
-            term.set_command('');
-            term.history().append(cmd);
-            set_try_run(false);
-            term.exec(cmd, false)
+            TRY_RUN = true;  // Default back to true.
         }
 
         var term = $('body').terminal(
@@ -53,7 +46,14 @@
                 term.error(e.message);
             },
             keymap: {
-                "SHIFT+ENTER": (e, orig) => pushLineNoRun(),
+                "SHIFT+ENTER": (e, orig) => {
+                    // pushLineNoRun()
+                    TRY_RUN = false;
+                    let cmd = term.get_command();
+                    term.set_command('');
+                    term.history().append(cmd);
+                    term.exec(cmd, false)
+                },
                 "BACKSPACE": (e, orig) => {
                     // Allow backspace to remove a line.
                     let cmd = term.get_command();
@@ -95,9 +95,9 @@
         import sys
         from js import term, pyodide as pyodidejs, console
         import pyodide
+        import js
         
         _buffer = []
-        _try_run = True
 
         class _StringIORedirect(io.StringIO):
             """ StringIO, but everything is echoed to the terminal."""
@@ -118,10 +118,6 @@
         # sys.stderr = _StringIORedirect('red')
         sys.stderr = sys.stdout
 
-        def _set_try_run(val):
-            global _try_run
-            _try_run = val
-
         def _get_buffer_len():
             return len(_buffer)
         
@@ -135,7 +131,7 @@
             """Add line of code to buffer and execute it if ready."""
             _buffer.append(line)
             
-            if _try_run:
+            if js.TRY_RUN:
                 # Always exec if final line is whitespace.
                 if line.strip() == "":
                     return _exec_buffer()
@@ -148,7 +144,6 @@
                     except (OverflowError, SyntaxError, ValueError):
                         pass  # Allow these to occur when the user executes the code.
 
-            _set_try_run(True)  # Always default back to true for next input.
             # More input expected, set prompt accordingly.
             term.set_prompt('[[;gray;]... ]')
 
@@ -170,7 +165,6 @@
         `)
 
         var push = pyodide.pyimport('_push')
-        var set_try_run = pyodide.pyimport('_set_try_run')
         var get_buffer_len = pyodide.pyimport('_get_buffer_len')
         var pop = pyodide.pyimport('_pop')
         var clear_buffer = pyodide.pyimport('_clear_buffer')
