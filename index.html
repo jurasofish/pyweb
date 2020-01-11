@@ -114,9 +114,7 @@
                 # console.log(self.line_buffer)
                 term.update(-1, self.line_buffer)
         
-        sys.stdout = _StringIORedirect()
-        # sys.stderr = _StringIORedirect('red')
-        sys.stderr = sys.stdout
+        _out = sys.stdout = sys.stderr = _StringIORedirect()
 
         def _push(line):
             """Add line of code to buffer and execute it if ready."""
@@ -141,8 +139,7 @@
 
         def _exec_buffer():
             """ Execute and clear the buffer. """
-            sys.stdout.line_buffer = ''
-            sys.stderr.line_buffer = ''
+            _out.line_buffer = ''
             code_str = "\n".join(_buffer)
             display = len(_buffer)==1  # Only display if code is a single line.
             _buffer.clear()
