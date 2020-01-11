@@ -28,10 +28,7 @@
       languagePluginLoader.then(() => {
         async function pushCode(line) {
             push(line);
-            // code might still be running at this point.
-            // todo maybe have an error after a certain amount of time.
-            while (RUNNING)
-                await __delay__(5);
+            while (RUNNING) {await __delay__(1)}  // Wait for running to finish.
             TRY_RUN = true;  // Default back to true.
         }
 
