@@ -13,6 +13,7 @@
       let DEBUG = true;
       let RUNNING = false;
       var TRY_RUN = true;  // If false the buffer will not be executed when pressing enter.
+      let REDIRECTCONSOLE = false;  // True to redirect console log/error to terminal.
 
       function __delay__(timer) {
             // Delay for timer milliseconds
@@ -31,6 +32,21 @@
             while (RUNNING) {await __delay__(1)}  // Wait for running to finish.
             TRY_RUN = true;  // Default back to true.
         }
+
+        (function(){
+            // Override console.log and console.error to add terminal echo/error to it.
+            // https://stackoverflow.com/a/11403146/8899565
+            let oldLog = console.log;
+            let oldError = console.error;
+            console.log = function (message) {
+                if (REDIRECTCONSOLE) {term.echo(message)}
+                oldLog.apply(console, arguments);
+            };
+            console.error = function (message) {
+                if (REDIRECTCONSOLE) {term.error(message)}
+                oldError.apply(console, arguments);
+            };
+        })();
 
         var term = $('body').terminal(
           pushCode,
