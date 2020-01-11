@@ -101,8 +101,7 @@
 
         class _StringIORedirect(io.StringIO):
             """ StringIO, but everything is echoed to the terminal."""
-            def __init__(self, colour='', *args, **kwargs):
-                self.colour = colour
+            def __init__(self, *args, **kwargs):
                 self.line_buffer = ''
                 super().__init__(*args, **kwargs)
             def write(self, *args, **kwargs):
@@ -112,7 +111,8 @@
                 if not self.line_buffer:
                     term.echo('')
                 self.line_buffer += args[0]
-                term.update(-1, f"[[;{self.colour};]{self.line_buffer}]")
+                # console.log(self.line_buffer)
+                term.update(-1, self.line_buffer)
         
         sys.stdout = _StringIORedirect()
         # sys.stderr = _StringIORedirect('red')
