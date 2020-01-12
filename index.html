@@ -33,7 +33,7 @@
                 (r) => {
                     RUNNING = false;
                     REDIRECTCONSOLE = false;
-                    term.echo(r);
+                    term.echoRaw(r);
                 }, 
                 (r) => {
                     RUNNING = false;
@@ -56,7 +56,7 @@
             let oldLog = console.log;
             let oldError = console.error;
             console.log = function (message) {
-                if (REDIRECTCONSOLE) {term.echo(message)}
+                if (REDIRECTCONSOLE) {term.echoRaw(message)}
                 oldLog.apply(console, arguments);
             };
             console.error = function (message) {
@@ -111,12 +111,22 @@
                     pyodide.runPython('_buffer.clear()');
                     term.set_command('');
                     term.exec('', false);
-                    term.update(-1, cancelled_line);
+                    term.updateRaw(-1, cancelled_line);
                     console.log(cancelled_line)
                 }
             }
           }
         );
+
+        term.echoRaw = function(line) {
+            line = $.terminal.escape_brackets(line);
+            term.echo(line);
+        }
+
+        term.updateRaw = function(lineno, line) {
+            line = $.terminal.escape_brackets(line);
+            term.update(lineno, line);
+        }
 
         window.term = term;
         pyodide.runPython(String.raw`
@@ -139,10 +149,10 @@
 
                 # Start a new line if there isn't one already
                 if not self.line_buffer:
-                    term.echo('')
+                    term.echoRaw('')
                 self.line_buffer += args[0]
                 # console.log(self.line_buffer)
-                term.update(-1, self.line_buffer)
+                term.updateRaw(-1, self.line_buffer)
         
         _out = sys.stdout = sys.stderr = _StringIORedirect()
 
