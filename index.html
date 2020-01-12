@@ -162,7 +162,7 @@
             
             if js.TRY_RUN:
                 # Always exec if final line is whitespace.
-                if line.strip() == "":
+                if line.split('\n')[-1].strip() == "":
                     return _exec_buffer()
                 
                 # Exec on single line input 
