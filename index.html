@@ -65,6 +65,15 @@
             };
         })();
 
+        let shift_enter = function() {
+            // pushLineNoRun()
+            TRY_RUN = false;
+            let cmd = term.get_command();
+            term.set_command('');
+            term.history().append(cmd);
+            term.exec(cmd, false)
+        }
+
         var term = $('body').terminal(
           pushCode,
           {
@@ -76,14 +85,7 @@
                 term.error(e.message);
             },
             keymap: {
-                "SHIFT+ENTER": (e, orig) => {
-                    // pushLineNoRun()
-                    TRY_RUN = false;
-                    let cmd = term.get_command();
-                    term.set_command('');
-                    term.history().append(cmd);
-                    term.exec(cmd, false)
-                },
+                "SHIFT+ENTER": shift_enter,
                 "BACKSPACE": (e, orig) => {
                     // Allow backspace to remove a line.
                     let cmd = term.get_command();
