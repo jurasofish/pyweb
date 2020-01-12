@@ -120,6 +120,22 @@
           }
         );
 
+        term.bind("paste", function(e){
+            // Paste text in terminal as though shift + enter was used.
+            e = e.originalEvent;
+            if (e.clipboardData.getData) {
+                let text = e.clipboardData.getData('text/plain');
+                lines = text.split("\n");
+                lines.forEach( (line, i) => {
+                    term.insert(line);
+                    if (i != lines.length - 1) {  //  Don't return on last line.
+                        shift_enter();
+                    }
+                })
+            }
+            return false; // Don't run other paste events :)
+        } );
+
         term.echoRaw = function(line) {
             line = $.terminal.escape_brackets(line);
             term.echo(line);
