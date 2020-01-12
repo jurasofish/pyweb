@@ -1,0 +1,64 @@
+<!doctype html>
+  <html>
+    <head>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/addons/fullscreen/fullscreen.css" />
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.js"></script>
+    </head>
+    <body>
+      <div id="terminal"></div>
+      <script>
+        const DEBUG = true;
+        const NEWLINE = '\r\n';
+        const KEYS = {
+            // Map from human readable key to keycode used by term.on('key', f)
+            'ENTER': 13,
+            'C': 67,
+            'BACKSPACE': 8,
+        }
+        const PROMPT = '>>> ';  // Prompt for start of input.
+        const CONTPROMPT = '... ';  // Prompt for continuation line.
+        var CUR_PROMPT = '';  // Which prompt is currently being displayed.
+        var term = new Terminal();
+        term.open(document.getElementById('terminal'));
+        
+        term.prompt = () => {term.write(PROMPT); CUR_PROMPT = PROMPT;}
+        term.contPrompt = () => {term.write(CONTPROMPT); CUR_PROMPT = CONTPROMPT;}
+        term.newline = () => term.write(NEWLINE);
+
+        term.on("key", function(key, ev) {
+            const printable = (
+                   !ev.altKey
+                && !ev.altGraphKey
+                && !ev.ctrlKey
+                && !ev.metaKey
+            );
+            if (DEBUG) {console.log(key, ev.keyCode, ev)}
+            
+            if (ev.keyCode == KEYS.ENTER) {
+                term.newline();
+                term.prompt();
+            } else if (ev.keyCode == KEYS.BACKSPACE) {
+                // Do not delete the prompt
+                if (term.buffer.cursorX > CUR_PROMPT.length) {
+                    term.write("\b \b");
+                }
+            } else if (ev.keyCode == KEYS.C && ev.ctrlKey) {
+                term.write("^C");
+            } else if (printable) {
+                term.write(key);
+            }
+        });
+
+        term.on("paste", function(data) {
+            term.write(data);
+        });
+
+        term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m ');
+        term.newline();
+        term.prompt();
+        
+
+      </script>
+    </body>
+  </html>
