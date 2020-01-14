@@ -33,7 +33,7 @@
                 (r) => {
                     RUNNING = false;
                     REDIRECTCONSOLE = false;
-                    term.echo(r);
+                    term.echoRaw(r);
                 }, 
                 (r) => {
                     RUNNING = false;
@@ -56,7 +56,7 @@
             let oldLog = console.log;
             let oldError = console.error;
             console.log = function (message) {
-                if (REDIRECTCONSOLE) {term.echo(message)}
+                if (REDIRECTCONSOLE) {term.echoRaw(message)}
                 oldLog.apply(console, arguments);
             };
             console.error = function (message) {
@@ -64,6 +64,15 @@
                 oldError.apply(console, arguments);
             };
         })();
+
+        let shift_enter = function() {
+            // pushLineNoRun()
+            TRY_RUN = false;
+            let cmd = term.get_command();
+            term.set_command('');
+            term.history().append(cmd);
+            term.exec(cmd, false)
+        }
 
         var term = $('body').terminal(
           pushCode,
@@ -76,14 +85,7 @@
                 term.error(e.message);
             },
             keymap: {
-                "SHIFT+ENTER": (e, orig) => {
-                    // pushLineNoRun()
-                    TRY_RUN = false;
-                    let cmd = term.get_command();
-                    term.set_command('');
-                    term.history().append(cmd);
-                    term.exec(cmd, false)
-                },
+                "SHIFT+ENTER": shift_enter,
                 "BACKSPACE": (e, orig) => {
                     // Allow backspace to remove a line.
                     let cmd = term.get_command();
@@ -111,12 +113,38 @@
                     pyodide.runPython('_buffer.clear()');
                     term.set_command('');
                     term.exec('', false);
-                    term.update(-1, cancelled_line);
+                    term.updateRaw(-1, cancelled_line);
                     console.log(cancelled_line)
                 }
             }
           }
         );
+
+        term.bind("paste", function(e){
+            // Paste text in terminal as though shift + enter was used.
+            e = e.originalEvent;
+            if (e.clipboardData.getData) {
+                let text = e.clipboardData.getData('text/plain');
+                lines = text.split("\n");
+                lines.forEach( (line, i) => {
+                    term.insert(line);
+                    if (i != lines.length - 1) {  //  Don't return on last line.
+                        shift_enter();
+                    }
+                })
+            }
+            return false; // Don't run other paste events :)
+        } );
+
+        term.echoRaw = function(line) {
+            line = $.terminal.escape_brackets(line);
+            term.echo(line);
+        }
+
+        term.updateRaw = function(lineno, line) {
+            line = $.terminal.escape_brackets(line);
+            term.update(lineno, line);
+        }
 
         window.term = term;
         pyodide.runPython(String.raw`
@@ -139,10 +167,10 @@
 
                 # Start a new line if there isn't one already
                 if not self.line_buffer:
-                    term.echo('')
+                    term.echoRaw('')
                 self.line_buffer += args[0]
                 # console.log(self.line_buffer)
-                term.update(-1, self.line_buffer)
+                term.updateRaw(-1, self.line_buffer)
         
         _out = sys.stdout = sys.stderr = _StringIORedirect()
 
@@ -152,7 +180,7 @@
             
             if js.TRY_RUN:
                 # Always exec if final line is whitespace.
-                if line.strip() == "":
+                if line.split('\n')[-1].strip() == "":
                     return _exec_buffer()
                 
                 # Exec on single line input 
@@ -183,6 +211,21 @@
         `)
 
         var push = pyodide.pyimport('_push')
+        
+        /*
+        term.exec('')
+        term.exec('# To import a python package you must:')
+        term.exec('#     1. Load the files into the virtual filesystem')
+        term.exec('#     2. import the package like normal')
+        term.exec('')
+        term.exec('js.loadPackageFlagged("numpy")  # Load the files into the virtual filesystem')
+        term.exec('import numpy as np  # import it as normal')
+        term.exec('')
+        term.exec('a = np.array([1, 2, 3])')
+        term.exec('a')
+        term.exec('print(a)')
+        */
+        
       });
     </script>
   </body>
