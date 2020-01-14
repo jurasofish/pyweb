@@ -211,6 +211,21 @@
         `)
 
         var push = pyodide.pyimport('_push')
+        
+        /*
+        term.exec('')
+        term.exec('# To import a python package you must:')
+        term.exec('#     1. Load the files into the virtual filesystem')
+        term.exec('#     2. import the package like normal')
+        term.exec('')
+        term.exec('js.loadPackageFlagged("numpy")  # Load the files into the virtual filesystem')
+        term.exec('import numpy as np  # import it as normal')
+        term.exec('')
+        term.exec('a = np.array([1, 2, 3])')
+        term.exec('a')
+        term.exec('print(a)')
+        */
+        
       });
     </script>
   </body>
