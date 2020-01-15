@@ -18,12 +18,13 @@
         }
         const PROMPT = '>>> ';  // Prompt for start of input.
         const CONTPROMPT = '... ';  // Prompt for continuation line.
-        var CUR_PROMPT = '';  // Which prompt is currently being displayed.
+        if (PROMPT.length != CONTPROMPT.length) {throw "promps must be same length"}
+        const PROMPT_LEN = prompt.length;  // Length of prompt.
         var term = new Terminal();
         term.open(document.getElementById('terminal'));
         
-        term.prompt = () => {term.write(PROMPT); CUR_PROMPT = PROMPT;}
-        term.contPrompt = () => {term.write(CONTPROMPT); CUR_PROMPT = CONTPROMPT;}
+        term.prompt = () => term.write(PROMPT);
+        term.contPrompt = () => term.write(CONTPROMPT);
         term.newline = () => term.write(NEWLINE);
 
         term.on("key", function(key, ev) {
@@ -40,7 +41,7 @@
                 term.prompt();
             } else if (ev.keyCode == KEYS.BACKSPACE) {
                 // Do not delete the prompt
-                if (term.buffer.cursorX > CUR_PROMPT.length) {
+                if (term.buffer.cursorX > PROMPT_LEN) {
                     term.write("\b \b");
                 }
             } else if (ev.keyCode == KEYS.C && ev.ctrlKey) {
