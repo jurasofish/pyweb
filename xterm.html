@@ -19,7 +19,7 @@
         const PROMPT = '>>> ';  // Prompt for start of input.
         const CONTPROMPT = '... ';  // Prompt for continuation line.
         if (PROMPT.length != CONTPROMPT.length) {throw "promps must be same length"}
-        const PROMPT_LEN = prompt.length;  // Length of prompt.
+        const PROMPT_LEN = PROMPT.length;  // Length of prompt.
         var term = new Terminal();
         term.open(document.getElementById('terminal'));
         
