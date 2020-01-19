@@ -14,15 +14,7 @@
       var TRY_RUN = true;  // If false the buffer will not be executed when pressing enter.
       let REDIRECTCONSOLE = false;  // True to redirect console log/error to terminal.
 
-      function __delay__(timer) {
-            // Delay for timer milliseconds
-            // https://stackoverflow.com/a/51212718/8899565
-            return new Promise(resolve => {
-                setTimeout(function () {
-                    resolve();
-                }, timer);
-            });
-        };
+      let __delay__ = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         var loadPackageFlagged = function(packageName) {
             // Load package into virtual filesystem and flag to console
