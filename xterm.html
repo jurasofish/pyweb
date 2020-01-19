@@ -4,6 +4,7 @@
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.css" />
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/addons/fullscreen/fullscreen.css" />
       <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.js"></script>
+      <script src="https://pyodide.cdn.iodide.io/pyodide.js"></script>
     </head>
     <body>
       <div id="terminal"></div>
@@ -58,6 +59,22 @@
         term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m ');
         term.newline();
         term.prompt();
+
+        languagePluginLoader.then(() => {
+          pyodide.runPython(String.raw`
+            import io
+            import code
+            import sys
+            from js import term, pyodide as pyodidejs, console
+            import pyodide
+            import js
+    
+            
+            for i in range(100):
+              print(i)
+              term.write(str(i) + '\r\n')
+          `)
+        })
         
 
       </script>
