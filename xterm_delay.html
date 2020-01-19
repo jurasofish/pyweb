@@ -1,0 +1,31 @@
+<!doctype html>
+  <html>
+    <head>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/addons/fullscreen/fullscreen.css" />
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.js"></script>
+    </head>
+    <body>
+      <div id="terminal"></div>
+      <script>
+        var term = new Terminal();
+        term.open(document.getElementById('terminal'));
+      
+       let sleep = function(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        let write_many = async function() {
+          for (let i = 0; i<100; i++) {
+            await sleep(100);
+            console.log(i);
+            console.log(i);
+            term.write(String(i) + '\r\n');
+          }
+        }
+        write_many()
+        console.log('done')
+
+      </script>
+    </body>
+  </html>
