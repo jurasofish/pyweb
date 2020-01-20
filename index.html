@@ -200,6 +200,8 @@
 
             # More input expected, set prompt accordingly.
             term.set_prompt('[[;gray;]... ]')
+            if line and line.strip()[-1] == ':':
+                term.insert('    ')
 
 
         def _exec_buffer():
