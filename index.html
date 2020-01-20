@@ -184,12 +184,17 @@
                     term.echoRaw(self.line_buffer)
             def clear(self):
                 self.line_buffer = ''
+            def get_output(self):
+                return self.line_buffer
 
         
         _out = sys.stdout = sys.stderr = _StringIORedirect()
 
         def _push(line):
-            """Add line of code to buffer and execute it if ready."""
+            """Add line of code to buffer and execute it if ready.
+            returns a tuple of (stdout string, execution result),
+            both of which are None if no execution was performed.
+            """
            
             # replace leading tabs with spaces
             if line and js.TAB_TO_SPACE:
@@ -222,10 +227,14 @@
             # Add more indentatino if line ends with a colon
             if line and line.strip()[-1] == ':':
                 term.insert(' '*js.TAB_SIZE)
+            
+            return (None, None)
 
 
         def _exec_buffer():
-            """ Execute and clear the buffer. """
+            """ Execute and clear the buffer.
+            returns a tuple of (stdout string, execution result)
+            """
             _out.clear()
             code_str = "\n".join(_buffer)
             display = len(_buffer)==1  # Only display if code is a single line.
@@ -239,6 +248,7 @@
             if display and res is not None:
                 print(repr(res), end='')
             _out.display()
+            return (_out.get_output(), res)
         `)
         
         /*
