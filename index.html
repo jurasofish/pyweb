@@ -209,7 +209,7 @@
             # More input expected, set prompt accordingly.
             term.set_prompt('[[;gray;]... ]')
             if line and line.strip()[-1] == ':':
-                term.insert('    ')
+                term.insert(' '*js.TAB_SIZE)
 
 
         def _exec_buffer():
