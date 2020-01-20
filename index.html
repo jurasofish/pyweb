@@ -36,14 +36,7 @@
           );
       };
 
-      languagePluginLoader.then(() => {
-        async function pushCode(line) {
-            push(line);
-            while (RUNNING) {await __delay__(1)}  // Wait for running to finish.
-            TRY_RUN = true;  // Default back to true.
-        }
-
-        (function(){
+      (function(){
             // Override console.log and console.error to add terminal echo/error to it.
             // https://stackoverflow.com/a/11403146/8899565
             let oldLog = console.log;
@@ -56,7 +49,14 @@
                 if (REDIRECTCONSOLE) {term.error(message)}
                 oldError.apply(console, arguments);
             };
-        })();
+      })();
+
+      languagePluginLoader.then(() => {
+        async function pushCode(line) {
+            push(line);
+            while (RUNNING) {await __delay__(1)}  // Wait for running to finish.
+            TRY_RUN = true;  // Default back to true.
+        }
 
         let shift_enter = function() {
             // pushLineNoRun()
