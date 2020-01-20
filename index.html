@@ -54,7 +54,7 @@
 
       languagePluginLoader.then(() => {
         async function pushCode(line) {
-            push(line);
+            pyodide.globals._push(line);
             while (RUNNING) {await __delay__(1)}  // Wait for running to finish.
             TRY_RUN = true;  // Default back to true.
         }
@@ -218,8 +218,6 @@
                 print(repr(res), end='')
             _out.display()
         `)
-
-        var push = pyodide.pyimport('_push')
         
         /*
         term.exec('')
