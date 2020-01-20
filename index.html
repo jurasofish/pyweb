@@ -34,7 +34,7 @@
                   term.error(r);
               }
           );
-      }
+      };
 
       languagePluginLoader.then(() => {
         async function pushCode(line) {
@@ -65,7 +65,7 @@
             term.set_command('');
             term.history().append(cmd);
             term.exec(cmd, false)
-        }
+        };
 
         var term = $('body').terminal(
           pushCode,
@@ -127,17 +127,17 @@
                 })
             }
             return false; // Don't run other paste events :)
-        } );
+        });
 
         term.echoRaw = function(line) {
             line = $.terminal.escape_brackets(line);
             term.echo(line);
-        }
+        };
 
         term.updateRaw = function(lineno, line) {
             line = $.terminal.escape_brackets(line);
             term.update(lineno, line);
-        }
+        };
 
         window.term = term;
         pyodide.runPython(String.raw`
