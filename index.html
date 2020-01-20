@@ -99,18 +99,18 @@
                     }
                 },
                 "CTRL+C": (e, orig) => {
+                    // todo: fix term prompt when ctrl c
                     // Cancel current input.
                     let cmd = term.get_command();
+                    let rawCmd = $.terminal.escape_brackets(cmd);
                     term.insert('^C');
-                    let cancelled_line = term.get_prompt() + term.get_command();
                     if (cmd.trim().length > 0){
                         term.history().append(term.get_command());
                     }
                     pyodide.runPython('_buffer.clear()');
                     term.set_command('');
                     term.exec('', false);
-                    term.updateRaw(-1, cancelled_line);
-                    console.log(cancelled_line)
+                    term.update(-1, term.get_prompt() + rawCmd);
                 }
             }
           }
