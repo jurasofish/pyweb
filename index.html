@@ -14,6 +14,7 @@
       let DEDENT_ON_PASTE = true;  // If true, dedent text when pasting. 
       var TAB_TO_SPACE = true;  // If true input leading tabs converted to spaces.
       var TAB_SIZE = 4;  // How many spaces per tab if TAB_TO_SPACE.
+      var PRINT_TO_JS_CONSOLE = true;  // True to push python stdout/stedrr to console.log.
       let RUNNING = false;  // Wait for RUNNING==false before allowing next console prompt.
       var TRY_RUN = true;  // If false the buffer will not be executed when pressing enter.
       let REDIRECTCONSOLE = false;  // True to redirect console log/error to terminal.
@@ -170,9 +171,11 @@
             def __init__(self, *args, **kwargs):
                 self.line_buffer = ''
                 super().__init__(*args, **kwargs)
-            def write(self, *args, **kwargs):
-                # super().write(*args, **kwargs)
-                self.line_buffer += args[0]
+            def write(self, data, *args, **kwargs):
+                super().write(data, *args, **kwargs)
+                self.line_buffer += data
+                if js.PRINT_TO_JS_CONSOLE:
+                    console.log(data)
             def display(self):
                 if self.line_buffer:
                     term.echoRaw(self.line_buffer)
