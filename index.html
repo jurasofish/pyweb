@@ -99,7 +99,6 @@
                     }
                 },
                 "CTRL+C": (e, orig) => {
-                    // todo: fix term prompt when ctrl c
                     // Cancel current input.
                     let cmd = term.get_command();
                     let rawCmd = $.terminal.escape_brackets(cmd);
