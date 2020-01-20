@@ -12,6 +12,8 @@
       'use strict';
       let DEBUG = true;  // Log some debug stuff if true
       let DEDENT_ON_PASTE = true;  // If true, dedent text when pasting. 
+      var TAB_TO_SPACE = true;  // If true input leading tabs converted to spaces.
+      var TAB_SIZE = 4;  // How many spaces per tab if TAB_TO_SPACE.
       let RUNNING = false;  // Wait for RUNNING==false before allowing next console prompt.
       var TRY_RUN = true;  // If false the buffer will not be executed when pressing enter.
       let REDIRECTCONSOLE = false;  // True to redirect console log/error to terminal.
@@ -183,6 +185,13 @@
 
         def _push(line):
             """Add line of code to buffer and execute it if ready."""
+           
+            # replace leading tabs with spaces
+            if line and js.TAB_TO_SPACE:
+                white_count = len(line) - len(line.lstrip())
+                white_expanded = line[:white_count].replace('\t', ' '*js.TAB_SIZE)
+                line = white_expanded + line[white_count:]
+
             _buffer.append(line)
             
             if js.TRY_RUN:
