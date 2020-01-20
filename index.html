@@ -173,7 +173,8 @@
                 # super().write(*args, **kwargs)
                 self.line_buffer += args[0]
             def display(self):
-                term.echoRaw(self.line_buffer)
+                if self.line_buffer:
+                    term.echoRaw(self.line_buffer)
             def clear(self):
                 self.line_buffer = ''
 
