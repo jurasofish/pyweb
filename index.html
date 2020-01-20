@@ -196,6 +196,7 @@
 
         def _exec_buffer():
             """ Execute and clear the buffer. """
+            _out.flush()
             code_str = "\n".join(_buffer)
             display = len(_buffer)==1  # Only display if code is a single line.
             _buffer.clear()
@@ -203,7 +204,6 @@
             res = pyodide.eval_code(code_str, globals())
             if display and res is not None:
                 print(repr(res), end='')
-            _out.flush()
         `)
 
         var push = pyodide.pyimport('_push')
