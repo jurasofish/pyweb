@@ -11,6 +11,7 @@
     <script>
       'use strict';
       let DEBUG = true;  // Log some debug stuff if true
+      let DEDENT_ON_PASTE = true;  // If true, dedent text when pasting. 
       let RUNNING = false;  // Wait for RUNNING==false before allowing next console prompt.
       var TRY_RUN = true;  // If false the buffer will not be executed when pressing enter.
       let REDIRECTCONSOLE = false;  // True to redirect console log/error to terminal.
@@ -119,7 +120,10 @@
             e = e.originalEvent;
             if (e.clipboardData.getData) {
                 let text = e.clipboardData.getData('text/plain');
-                lines = text.split("\n");
+                if (DEDENT_ON_PASTE) {
+                    text = pyodide.globals.textwrap.dedent(text);
+                }
+                let lines = text.split("\n");
                 lines.forEach( (line, i) => {
                     term.insert(line);
                     if (i != lines.length - 1) {  //  Don't return on last line.
@@ -146,6 +150,7 @@
         import code
         import sys
         import traceback
+        import textwrap
         from js import term, pyodide as pyodidejs, console
         import pyodide
         import js
