@@ -202,10 +202,7 @@
             term.set_prompt('[[;grey;]>>> ]')
             res = pyodide.eval_code(code_str, globals())
             if display and res is not None:
-                if hasattr(res, '__repr__'):
-                    print(res.__repr__(), end='')
-                else:
-                    print(res, end='')
+                print(repr(res), end='')
             _out.flush()
         `)
 
