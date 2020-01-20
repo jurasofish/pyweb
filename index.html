@@ -208,6 +208,12 @@
 
             # More input expected, set prompt accordingly.
             term.set_prompt('[[;gray;]... ]')
+
+            # Reproduce indentation from previous line.
+            cur_indent = len(_buffer[-1]) - len(_buffer[-1].lstrip())
+            term.insert(cur_indent * ' ')
+
+            # Add more indentatino if line ends with a colon
             if line and line.strip()[-1] == ':':
                 term.insert(' '*js.TAB_SIZE)
 
