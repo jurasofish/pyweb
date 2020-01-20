@@ -15,6 +15,8 @@
       var TAB_TO_SPACE = true;  // If true input leading tabs converted to spaces.
       var TAB_SIZE = 4;  // How many spaces per tab if TAB_TO_SPACE.
       var PRINT_TO_JS_CONSOLE = true;  // True to push python stdout/stedrr to console.log.
+      const OUTPUT_LINES = 10000;  // Number of lines to display.
+
       let RUNNING = false;  // Wait for RUNNING==false before allowing next console prompt.
       var TRY_RUN = true;  // If false the buffer will not be executed when pressing enter.
       let REDIRECTCONSOLE = false;  // True to redirect console log/error to terminal.
@@ -76,6 +78,8 @@
           {
             greetings: "Welcome to the Pyodide terminal emulator 🐍",
             prompt: "[[;grey;]>>> ]",
+            clear: false,  //  disable "clear" command.
+            outputLimit: OUTPUT_LINES,  // Limit number of displayed lines.
             exceptionHandler: (e) => {
                 console.log(e.message);
                 console.log(e.stack);
