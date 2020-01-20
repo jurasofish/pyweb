@@ -145,6 +145,7 @@
         import io
         import code
         import sys
+        import traceback
         from js import term, pyodide as pyodidejs, console
         import pyodide
         import js
@@ -202,7 +203,11 @@
             display = len(_buffer)==1  # Only display if code is a single line.
             _buffer.clear()
             term.set_prompt('[[;grey;]>>> ]')
-            res = pyodide.eval_code(code_str, globals())
+            try:
+                res = pyodide.eval_code(code_str, globals())
+            except Exception as e:
+                res = None
+                print(traceback.format_exc(), file=sys.stderr, end='')
             if display and res is not None:
                 print(repr(res), end='')
             _out.display()
