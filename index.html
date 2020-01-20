@@ -115,6 +115,7 @@
 
         term.bind("paste", function(e){
             // Paste text in terminal as though shift + enter was used.
+            // TODO: handle pasting in the middle of a line.
             e = e.originalEvent;
             if (e.clipboardData.getData) {
                 let text = e.clipboardData.getData('text/plain');
