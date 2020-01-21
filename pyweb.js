@@ -54,21 +54,53 @@ var pyWeb = {
             };
         })();
 
+        let shift_enter = () => {
+            // pushLineNoRun()
+            pyWeb.TRY_RUN = false;
+            let cmd = pyWeb.term.get_command();
+            pyWeb.term.set_command('');
+            pyWeb.term.history().append(cmd);
+            pyWeb.term.exec(cmd, false)
+        };
+
+        let backspace = (e, orig) => {
+            // Allow backspace to remove a line.
+            let cmd = pyWeb.term.get_command();
+            if (cmd.length > 0) {
+                orig();  // Normal backspace if there are characters.
+            } else {
+                let buffer_len = pyodide.runPython('len(_buffer)');
+                if (buffer_len == 0) {return};
+                pyWeb.term.remove_line(-1);
+                let new_cmd = pyodide.runPython('_buffer.pop()');
+                pyWeb.term.set_command(new_cmd)
+                if (buffer_len == 1) {
+                    pyWeb.term.set_prompt('[[;gray;]>>> ]');
+                }
+            }
+        }
+
+        let ctrl_c = () => {
+            console.log(11)
+            // Cancel current input.
+            let cmd = pyWeb.term.get_command();
+            let rawCmd = $.terminal.escape_brackets(cmd);
+            pyWeb.term.insert('^C');
+            if (cmd.trim().length > 0){
+                pyWeb.term.history().append(term.get_command());
+            }
+            pyodide.runPython('_buffer.clear()');
+            pyWeb.term.set_command('');
+            pyWeb.term.exec('', false);
+            pyWeb.term.update(-1, term.get_prompt() + rawCmd);
+        }
+
         languagePluginLoader.then(() => {
             async function pushCode(line) {
                 pyodide.globals._push(line);
                 while (pyWeb.RUNNING) {await pyWeb.__delay__(1)}  // Wait for running to finish.
                 pyWeb.TRY_RUN = true;  // Default back to true.
             }
-
-            let shift_enter = function() {
-                // pushLineNoRun()
-                pyWeb.TRY_RUN = false;
-                let cmd = term.get_command();
-                term.set_command('');
-                term.history().append(cmd);
-                term.exec(cmd, false)
-            };
 
             var term = $('#' + div).terminal(
                 pushCode,
@@ -84,35 +116,8 @@ var pyWeb = {
                     },
                     keymap: {
                         "SHIFT+ENTER": shift_enter,
-                        "BACKSPACE": (e, orig) => {
-                            // Allow backspace to remove a line.
-                            let cmd = term.get_command();
-                            if (cmd.length > 0) {
-                                orig();  // Normal backspace if there are characters.
-                            } else {
-                                let buffer_len = pyodide.runPython('len(_buffer)');
-                                if (buffer_len == 0) {return};
-                                term.remove_line(-1);
-                                let new_cmd = pyodide.runPython('_buffer.pop()');
-                                term.set_command(new_cmd)
-                                if (buffer_len == 1) {
-                                    term.set_prompt('[[;gray;]>>> ]');
-                                }
-                            }
-                        },
-                        "CTRL+C": (e, orig) => {
-                            // Cancel current input.
-                            let cmd = term.get_command();
-                            let rawCmd = $.terminal.escape_brackets(cmd);
-                            term.insert('^C');
-                            if (cmd.trim().length > 0){
-                                term.history().append(term.get_command());
-                            }
-                            pyodide.runPython('_buffer.clear()');
-                            term.set_command('');
-                            term.exec('', false);
-                            term.update(-1, term.get_prompt() + rawCmd);
-                        }
+                        "BACKSPACE": backspace,
+                        "CTRL+C": ctrl_c,
                     }
                 }
             );
