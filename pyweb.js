@@ -84,15 +84,15 @@ var pyWeb = {
             console.log(11)
             // Cancel current input.
             let cmd = pyWeb.term.get_command();
-            let rawCmd = $.terminal.escape_brackets(cmd);
             pyWeb.term.insert('^C');
+            let rawCmdReproduce = $.terminal.escape_brackets(pyWeb.term.get_command());
             if (cmd.trim().length > 0){
-                pyWeb.term.history().append(term.get_command());
+                pyWeb.term.history().append(cmd);
             }
             pyodide.runPython('_buffer.clear()');
             pyWeb.term.set_command('');
             pyWeb.term.exec('', false);
-            pyWeb.term.update(-1, term.get_prompt() + rawCmd);
+            pyWeb.term.update(-1, term.get_prompt() + rawCmdReproduce);
         }
 
         languagePluginLoader.then(() => {
