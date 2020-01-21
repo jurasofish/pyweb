@@ -142,6 +142,7 @@ var pyWeb = {
                 }
             );
             pyWeb.term = term;
+            window.term = term;
 
             term.bind("paste", paste);
 
@@ -155,7 +156,6 @@ var pyWeb = {
                 term.update(lineno, line);
             };
 
-            window.term = term;
             pyodide.runPython(String.raw`
             import io
             import code
