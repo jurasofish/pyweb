@@ -8,7 +8,7 @@ var pyWeb = {
 
     __delay__: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
 
-    loadPackageFlagged: function(packageName) {
+    loadPackageFlagged: (packageName) => {
         // Load package into virtual filesystem and flag to console
         // that code is running.
         pyWeb.RUNNING = true;
