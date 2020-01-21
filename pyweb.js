@@ -95,6 +95,26 @@ var pyWeb = {
             pyWeb.term.update(-1, term.get_prompt() + rawCmdReproduce);
         }
 
+        let paste = (e) => {
+            // Paste text in terminal as though shift + enter was used.
+            // TODO: handle pasting in the middle of a line.
+            e = e.originalEvent;
+            if (e.clipboardData.getData) {
+                let text = e.clipboardData.getData('text/plain');
+                if (pyWeb.options.dedent_on_paste) {
+                    text = pyodide.globals.textwrap.dedent(text);
+                }
+                let lines = text.split("\n");
+                lines.forEach( (line, i) => {
+                    term.insert(line);
+                    if (i != lines.length - 1) {  //  Don't return on last line.
+                        shift_enter();
+                    }
+                })
+            }
+            return false; // Don't run other paste events :)
+        }
+
         languagePluginLoader.then(() => {
             async function pushCode(line) {
                 pyodide.globals._push(line);
@@ -123,25 +143,7 @@ var pyWeb = {
             );
             pyWeb.term = term;
 
-            term.bind("paste", function(e){
-                // Paste text in terminal as though shift + enter was used.
-                // TODO: handle pasting in the middle of a line.
-                e = e.originalEvent;
-                if (e.clipboardData.getData) {
-                    let text = e.clipboardData.getData('text/plain');
-                    if (pyWeb.options.dedent_on_paste) {
-                        text = pyodide.globals.textwrap.dedent(text);
-                    }
-                    let lines = text.split("\n");
-                    lines.forEach( (line, i) => {
-                        term.insert(line);
-                        if (i != lines.length - 1) {  //  Don't return on last line.
-                            shift_enter();
-                        }
-                    })
-                }
-                return false; // Don't run other paste events :)
-            });
+            term.bind("paste", paste);
 
             term.echoRaw = function(line) {
                 line = $.terminal.escape_brackets(line);
