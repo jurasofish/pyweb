@@ -3,7 +3,7 @@
 var pyWeb = {
 
     RUNNING: false,  // Wait for RUNNING==false before allowing next console prompt.
-    TRY_RUN: true,  // If false the buffer will not be executed when pressing enter.
+    MAYBE_RUN: true,  // If false the buffer will not be executed when pressing enter.
     REDIRECTCONSOLE: false,  // True to redirect console log/error to terminal.
 
     __delay__: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
@@ -56,7 +56,7 @@ var pyWeb = {
 
         let shift_enter = () => {
             // pushLineNoRun()
-            pyWeb.TRY_RUN = false;
+            pyWeb.MAYBE_RUN = false;
             let cmd = pyWeb.term.get_command();
             pyWeb.term.set_command('');
             pyWeb.term.history().append(cmd);
@@ -119,7 +119,7 @@ var pyWeb = {
             async function pushCode(line) {
                 pyodide.globals._push(line);
                 while (pyWeb.RUNNING) {await pyWeb.__delay__(1)}  // Wait for running to finish.
-                pyWeb.TRY_RUN = true;  // Default back to true.
+                pyWeb.MAYBE_RUN = true;  // Default back to true.
             }
 
             var term = $('#' + div).terminal(
@@ -210,7 +210,7 @@ var pyWeb = {
 
                 _buffer.append(line)
                 
-                if js.pyWeb.TRY_RUN:
+                if js.pyWeb.MAYBE_RUN:
                     # Always exec if final line is whitespace.
                     if line.split('\n')[-1].strip() == "":
                         return _exec_buffer()
