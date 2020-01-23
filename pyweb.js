@@ -174,7 +174,7 @@ var pyWeb = {
                 (does not re-render), calling term.echo every time data is written
                 is no different to calling term.echo once after the code
                 has been executed with all the data.
-                Hence the use of the flush() function instead of incrementally
+                Hence the use of display() and clear() instead of incrementally
                 calling term.echo().
                 """
                 def __init__(self, *args, **kwargs):
