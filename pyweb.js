@@ -59,7 +59,6 @@ var pyWeb = {
     },
 
     shift_enter: () => {
-        // pushLineNoRun()
         pyWeb.MAYBE_RUN = false;
         let cmd = pyWeb.term.get_command();
         pyWeb.term.set_command('');
@@ -85,7 +84,6 @@ var pyWeb = {
     },
 
     ctrl_c: () => {
-        console.log(11)
         // Cancel current input.
         let cmd = pyWeb.term.get_command();
         pyWeb.term.insert('^C');
