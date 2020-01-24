@@ -195,7 +195,10 @@ var pyWeb = {
             import pyodide
             import js
 
+
+            # buffer lines of code input from the terminal, to be executed later.
             _buffer = []
+
 
             class _StringIORedirect(io.StringIO):
                 """ StringIO, but everything is echoed to the terminal.
@@ -222,19 +225,38 @@ var pyWeb = {
                 def get_output(self):
                     return self.line_buffer
 
-
+            
+            # Redirect stdout and stderr
             _out = sys.stdout = sys.stderr = _StringIORedirect()
 
+
             def _push(line):
-                """Add line of code to buffer and execute it if ready.
-                returns a tuple of (stdout string, execution result),
-                both of which are None if no execution was performed.
+                """Add line of code to buffer and maybe execute it.
+
+                Leading tabs in the line are replaced with spaces
+                if the pyWeb tab_to_space option is set.
+
+                If the pyWeb flag MAYBE_RUN is set then the buffer might
+                be executed after the line is pushed. See function body
+                for logic of how this is decided.
+                If MAYBE_RUN is false, the buffer will not be executed.
+
+                Args:
+                    line (str): A string of code to be pushed onto the buffer.
+
+                Returns:
+                    If the buffer is executed, then the return value
+                    of _exec() is returned.
+                    If the buffer is not executed, None is returned.
                 """
+
+                # Equivalent to one tab, in spaces.
+                tab_equiv = ' '*js.pyWeb.options.tab_size
                 
                 # replace leading tabs with spaces
                 if line and js.pyWeb.options.tab_to_space:
                     white_count = len(line) - len(line.lstrip())
-                    white_expanded = line[:white_count].replace('\t', ' '*js.pyWeb.options.tab_size)
+                    white_expanded = line[:white_count].replace('\t', tab_equiv)
                     line = white_expanded + line[white_count:]
 
                 _buffer.append(line)
@@ -244,7 +266,7 @@ var pyWeb = {
                     if line.split('\n')[-1].strip() == "":
                         return _exec_buffer()
                     
-                    # Exec on single line input 
+                    # Exec on single line input if it's complete.
                     if len(_buffer) == 1:
                         try:
                             if code.compile_command(line):
@@ -252,30 +274,52 @@ var pyWeb = {
                         except (OverflowError, SyntaxError, ValueError):
                             pass  # Allow these to occur when the user executes the code.
 
-                # More input expected, set prompt accordingly.
+                # Haven't returned, so more input expected. Set prompt accordingly.
                 term.set_prompt('[[;gray;]... ]')
 
                 # Reproduce indentation from previous line.
                 cur_indent = len(_buffer[-1]) - len(_buffer[-1].lstrip())
                 term.insert(cur_indent * ' ')
 
-                # Add more indentatino if line ends with a colon
+                # Add more indentation if line ends with a colon.
                 if line and line.strip()[-1] == ':':
-                    term.insert(' '*js.pyWeb.options.tab_size)
-                
-                return (None, None)
+                    term.insert(tab_equiv)
 
 
             def _exec_buffer(buffer=_buffer, display_output=True):
                 """ Execute and clear the buffer.
-                display_output controls whether output is printed.
-                buffer is a list of lines to be joined by '\n' and executed,
-                which will be cleared. Can also be a string.
-                returns a dict of info from the execution.
+
+                Args:
+                    buffer (str or list of str): The code to be joined by
+                        "\n" and executed. This buffer will be cleared in-place.
+                        Can be a list of strings, or a string.
+                    display_output (bool): True to push stdout and stderr
+                        onto the pyWeb terminal.
+                
+                Returns:
+                    dict: A dictionary with info about the execution.
+                        The dict has the following structure:
+                        {
+                            'code': The code that was executed.
+                            'output': A string of what the code caused to be
+                                displayed on stdout and stderr.
+                            'result': If the executed code returns a value,
+                                this will be that value. It will follow the
+                                type conversion used by pyodide.
+                                Will be None for no result.
+                            'result_repr': a string representation of result.
+                            'exception': If the code raised an exception,
+                                then this will be the exception object.
+                                Will be None for no exception.
+                            'exception_string': A string representation of the
+                                exception object.
+                                Will be an empty string for no exception.
+                        }
+
                 """
                 if isinstance(buffer, str):
                     buffer = [buffer]
-                _out.clear()
+                _out.clear()  # Clear previous stdout/stderr.
                 code_str = "\n".join(buffer)
                 print_repr = len(buffer)==1  # Only if code is a single line.
                 buffer.clear()
@@ -283,7 +327,7 @@ var pyWeb = {
                 try:
                     res = pyodide.eval_code(code_str, globals())
                     exc = None
-                    exc_string = None
+                    exc_string = ''
                 except Exception as e:
                     res = None
                     exc = e
@@ -297,10 +341,10 @@ var pyWeb = {
                 return {
                     'code': code_str,
                     'output': _out.get_output(),
-                    'result_repr': repr(res),
                     'result': res,
-                    'exception_string': exc_string,
+                    'result_repr': repr(res),
                     'exception': exc,
+                    'exception_string': exc_string,
                 }
             `)
         });
