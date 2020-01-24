@@ -27,6 +27,67 @@ var pyWeb = {
         );
     },
 
+    shift_enter: () => {
+        // pushLineNoRun()
+        pyWeb.MAYBE_RUN = false;
+        let cmd = pyWeb.term.get_command();
+        pyWeb.term.set_command('');
+        pyWeb.term.history().append(cmd);
+        pyWeb.term.exec(cmd, false)
+    },
+
+    backspace: (e, orig) => {
+        // Allow backspace to remove a line.
+        let cmd = pyWeb.term.get_command();
+        if (cmd.length > 0) {
+            orig();  // Normal backspace if there are characters.
+        } else {
+            let buffer_len = pyodide.runPython('len(_buffer)');
+            if (buffer_len == 0) {return};
+            pyWeb.term.remove_line(-1);
+            let new_cmd = pyodide.runPython('_buffer.pop()');
+            pyWeb.term.set_command(new_cmd)
+            if (buffer_len == 1) {
+                pyWeb.term.set_prompt('[[;gray;]>>> ]');
+            }
+        }
+    },
+
+    ctrl_c: () => {
+        console.log(11)
+        // Cancel current input.
+        let cmd = pyWeb.term.get_command();
+        pyWeb.term.insert('^C');
+        let rawCmdReproduce = $.terminal.escape_brackets(pyWeb.term.get_command());
+        if (cmd.trim().length > 0){
+            pyWeb.term.history().append(cmd);
+        }
+        pyodide.runPython('_buffer.clear()');
+        pyWeb.term.set_command('');
+        pyWeb.term.exec('', false);
+        pyWeb.term.update(-1, term.get_prompt() + rawCmdReproduce);
+    },
+
+    paste: (e) => {
+        // Paste text in terminal as though shift + enter was used.
+        // TODO: handle pasting in the middle of a line.
+        e = e.originalEvent;
+        if (e.clipboardData.getData) {
+            let text = e.clipboardData.getData('text/plain');
+            if (pyWeb.options.dedent_on_paste) {
+                text = pyodide.globals.textwrap.dedent(text);
+            }
+            let lines = text.split("\n");
+            lines.forEach( (line, i) => {
+                pyWeb.term.insert(line);
+                if (i != lines.length - 1) {  //  Don't return on last line.
+                    pyWeb.shift_enter();
+                }
+            })
+        }
+        return false; // Don't run other paste events :)
+    },
+
     new: (div, options={}) => {
         
         let default_options = {
@@ -54,67 +115,6 @@ var pyWeb = {
             };
         })();
 
-        let shift_enter = () => {
-            // pushLineNoRun()
-            pyWeb.MAYBE_RUN = false;
-            let cmd = pyWeb.term.get_command();
-            pyWeb.term.set_command('');
-            pyWeb.term.history().append(cmd);
-            pyWeb.term.exec(cmd, false)
-        };
-
-        let backspace = (e, orig) => {
-            // Allow backspace to remove a line.
-            let cmd = pyWeb.term.get_command();
-            if (cmd.length > 0) {
-                orig();  // Normal backspace if there are characters.
-            } else {
-                let buffer_len = pyodide.runPython('len(_buffer)');
-                if (buffer_len == 0) {return};
-                pyWeb.term.remove_line(-1);
-                let new_cmd = pyodide.runPython('_buffer.pop()');
-                pyWeb.term.set_command(new_cmd)
-                if (buffer_len == 1) {
-                    pyWeb.term.set_prompt('[[;gray;]>>> ]');
-                }
-            }
-        }
-
-        let ctrl_c = () => {
-            console.log(11)
-            // Cancel current input.
-            let cmd = pyWeb.term.get_command();
-            pyWeb.term.insert('^C');
-            let rawCmdReproduce = $.terminal.escape_brackets(pyWeb.term.get_command());
-            if (cmd.trim().length > 0){
-                pyWeb.term.history().append(cmd);
-            }
-            pyodide.runPython('_buffer.clear()');
-            pyWeb.term.set_command('');
-            pyWeb.term.exec('', false);
-            pyWeb.term.update(-1, term.get_prompt() + rawCmdReproduce);
-        }
-
-        let paste = (e) => {
-            // Paste text in terminal as though shift + enter was used.
-            // TODO: handle pasting in the middle of a line.
-            e = e.originalEvent;
-            if (e.clipboardData.getData) {
-                let text = e.clipboardData.getData('text/plain');
-                if (pyWeb.options.dedent_on_paste) {
-                    text = pyodide.globals.textwrap.dedent(text);
-                }
-                let lines = text.split("\n");
-                lines.forEach( (line, i) => {
-                    term.insert(line);
-                    if (i != lines.length - 1) {  //  Don't return on last line.
-                        shift_enter();
-                    }
-                })
-            }
-            return false; // Don't run other paste events :)
-        }
-
         languagePluginLoader.then(() => {
             async function pushCode(line) {
                 pyodide.globals._push(line);
@@ -135,16 +135,16 @@ var pyWeb = {
                         term.error(e.message);
                     },
                     keymap: {
-                        "SHIFT+ENTER": shift_enter,
-                        "BACKSPACE": backspace,
-                        "CTRL+C": ctrl_c,
+                        "SHIFT+ENTER": pyWeb.shift_enter,
+                        "BACKSPACE": pyWeb.backspace,
+                        "CTRL+C": pyWeb.ctrl_c,
                     }
                 }
             );
             pyWeb.term = term;
             window.term = term;
 
-            term.bind("paste", paste);
+            term.bind("paste", pyWeb.paste);
 
             term.echoRaw = function(line) {
                 line = $.terminal.escape_brackets(line);
