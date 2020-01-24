@@ -27,6 +27,37 @@ var pyWeb = {
         );
     },
 
+    runCode: (code, display_input=true, display_output=true) => {
+        // Run a string of python code, can be multiline.
+        // display_input and display_output control whether the code and
+        // any outputs are displayed in the terinal or suppressed.
+
+        let rawCode, buffer_len;
+
+        // Remove buffered lines from terminal
+        buffer_len = pyodide.runPython('len(_buffer)');
+        for (let i=0; i < buffer_len; i++) {
+            pyWeb.term.remove_line(-1);
+        }
+        
+        if(display_input) {
+            rawCode = $.terminal.escape_brackets(code);
+            term.echo('[[;gray;]>>> ]' + rawCode);
+        }
+        let exec_info = pyodide.globals._exec_buffer(code, display_output)
+        
+        // Restore buffered lines to terminal
+        let prompt = '[[;gray;]>>> ]';
+        for (let i=0; i < buffer_len; i++) {
+            rawCode = $.terminal.escape_brackets(pyodide.runPython(`_buffer[${i}]`));
+            term.echo(prompt + rawCode);
+            prompt = '[[;gray;]... ]';  // continuation prompt for subsequent lines.
+        }
+        if(buffer_len > 0) {term.set_prompt('[[;gray;]... ]')}
+
+        return exec_info;
+    },
+
     shift_enter: () => {
         // pushLineNoRun()
         pyWeb.MAYBE_RUN = false;
@@ -237,24 +268,42 @@ var pyWeb = {
                 return (None, None)
 
 
-            def _exec_buffer():
+            def _exec_buffer(buffer=_buffer, display_output=True):
                 """ Execute and clear the buffer.
-                returns a tuple of (stdout string, execution result)
+                display_output controls whether output is printed.
+                buffer is a list of lines to be joined by '\n' and executed,
+                which will be cleared. Can also be a string.
+                returns a dict of info from the execution.
                 """
+                if isinstance(buffer, str):
+                    buffer = [buffer]
                 _out.clear()
-                code_str = "\n".join(_buffer)
-                display = len(_buffer)==1  # Only display if code is a single line.
-                _buffer.clear()
+                code_str = "\n".join(buffer)
+                print_repr = len(buffer)==1  # Only if code is a single line.
+                buffer.clear()
                 term.set_prompt('[[;grey;]>>> ]')
                 try:
                     res = pyodide.eval_code(code_str, globals())
+                    exc = None
+                    exc_string = None
                 except Exception as e:
                     res = None
-                    print(traceback.format_exc(), file=sys.stderr, end='')
-                if display and res is not None:
+                    exc = e
+                    exc_string = traceback.format_exc()
+                    if display_output:
+                        print(exc_string, file=sys.stderr, end='')
+                if print_repr and display_output and res is not None:
                     print(repr(res), end='')
-                _out.display()
-                return (_out.get_output(), res)
+                if display_output:
+                    _out.display()
+                return {
+                    'code': code_str,
+                    'output': _out.get_output(),
+                    'result_repr': repr(res),
+                    'result': res,
+                    'exception_string': exc_string,
+                    'exception': exc,
+                }
             `)
         });
     }
