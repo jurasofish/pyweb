@@ -210,7 +210,7 @@ var pyWeb = {
                     self.line_buffer = ''
                     super().__init__(*args, **kwargs)
                 def write(self, data, *args, **kwargs):
-                    super().write(data, *args, **kwargs)
+                    # super().write(data, *args, **kwargs)
                     self.line_buffer += data
                     if js.pyWeb.options.print_to_js_console:
                         console.log(data)
