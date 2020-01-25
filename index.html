@@ -35,7 +35,15 @@
     </div>
     <script src="pyweb.js"></script>
     <script>
-        pyWeb.new('terminal');
+        /*
+        pyWeb.new('terminal').then( () => {
+            console.log('pyWeb loaded')
+            pyWeb.loadPackage('numpy').then( () => {
+                console.log('numpy loaded');
+            })
+        })
+        */
+       
         /*
         term.exec('')
         term.exec('# To import a python package you must:')
