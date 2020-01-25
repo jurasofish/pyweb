@@ -98,7 +98,7 @@ var pyWeb = {
             pyWeb.term.echo(prompt + rawCode);
             prompt = '[[;gray;]... ]';  // continuation prompt for subsequent lines.
         }
-        if(buffer_len > 0) {term.set_prompt('[[;gray;]... ]')}
+        if(buffer_len > 0) {pyWeb.term.set_prompt('[[;gray;]... ]')}
 
         return exec_info;
     },
