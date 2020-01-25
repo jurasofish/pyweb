@@ -1,26 +1,56 @@
 'use strict';
 
 var pyWeb = {
-
-    RUNNING: false,  // Wait for RUNNING==false before allowing next console prompt.
-    MAYBE_RUN: true,  // If false the buffer will not be executed when pressing enter.
-    REDIRECTCONSOLE: false,  // True to redirect console log/error to terminal.
+    
+    // Wait for LOCK_TERMINAL==false before allowing next console prompt.
+    LOCK_TERMINAL: false,
+    
+    // If false the buffer will not be executed when pressing enter.
+    MAYBE_RUN: true,
+    
+    // True to redirect javascript console log/error to terminal.
+    // TODO: if REDIRECTCONSOLE and pyWeb.options.print_to_js_console are
+    //       both true then there's a double up. Fix.
+    REDIRECTCONSOLE: false,
 
     __delay__: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
 
-    loadPackageFlagged: (packageName) => {
-        // Load package into virtual filesystem and flag to console
-        // that code is running.
-        pyWeb.RUNNING = true;
+    loadPackageLocking: (packageName) => {
+        /* Load a package into the virtual filesystem and lock the console.
+
+        The pyodide loadPackage method is asynchronous, which by default
+        would allow the user to enter commands in the terminal
+        immediately after calling it despite the package files not being
+        loaded yet. This causes confusion for the user: loading
+        package files should appear to be a synchronous blocking operation.
+
+        This function sets the LOCK_TERMINAL flag and then clears it after the 
+        loadPackage promise resolve. This has the effect of causing the terminal
+        to wait while the package is loaded., which causes the terminal
+        to wait (lowkey busy wait, sorry) until the package is loaded before
+        allowing the user to enter more input.
+
+        The pyodide loadPackage method also spits out essential information
+        to the console, so the console is redirected to python for the duration
+        of the loading operation.
+
+        TODO: return the promise from this function for programmatic use.
+
+        Args:
+            packageName (str): name of package to load (e.g. "numpy")
+        */
+
+        // Load package into virtual filesystem and lock the console.
+        pyWeb.LOCK_TERMINAL = true;
         pyWeb.REDIRECTCONSOLE = true;  // Display info/errors for user.
         pyodide.loadPackage(packageName).then(
             (r) => {
-                pyWeb.RUNNING = false;
+                pyWeb.LOCK_TERMINAL = false;
                 pyWeb.REDIRECTCONSOLE = false;
                 pyWeb.term.echoRaw(r);
             },
             (r) => {
-                pyWeb.RUNNING = false;
+                pyWeb.LOCK_TERMINAL = false;
                 pyWeb.REDIRECTCONSOLE = false;
                 pyWeb.term.error(r);
             }
@@ -28,9 +58,24 @@ var pyWeb = {
     },
 
     runCode: (code, display_input=true, display_output=true) => {
-        // Run a string of python code, can be multiline.
-        // display_input and display_output control whether the code and
-        // any outputs are displayed in the terinal or suppressed.
+        /* Run a string of python code in the terminal.
+
+        This is intended as an external API to pyWeb, allowing developers
+        to run commands in the terminal as though they were typed by
+        a user.
+
+        TODO: When displaying the code use the continuation prompt (... )
+
+        Args:
+            code (str): string of code to execute. Can be multiline.
+            display_input (bool): True to display the code in the terminal
+                as though the user had typed it.
+            display_output (bool): True to allow the stdout and stderr
+                resulting from the code to be displayed in the terminal.
+
+        Returns:
+            object: as described in the python _exec() function.
+        */
 
         let rawCode, buffer_len;
 
@@ -59,6 +104,8 @@ var pyWeb = {
     },
 
     shift_enter: () => {
+        // Add a line of code to the buffer without executing and create a
+        // continuation line.
         pyWeb.MAYBE_RUN = false;
         let cmd = pyWeb.term.get_command();
         pyWeb.term.set_command('');
@@ -67,7 +114,8 @@ var pyWeb = {
     },
 
     backspace: (e, orig) => {
-        // Allow backspace to remove a line.
+        // This code extends the base backspace method to allow
+        // previous lines of the buffer to be removed.
         let cmd = pyWeb.term.get_command();
         if (cmd.length > 0) {
             orig();  // Normal backspace if there are characters.
@@ -84,7 +132,8 @@ var pyWeb = {
     },
 
     ctrl_c: () => {
-        // Cancel current input.
+        // Cancel current input: push currently typed text onto the history
+        // and start a fresh line.
         let cmd = pyWeb.term.get_command();
         pyWeb.term.insert('^C');
         let rawCmdReproduce = $.terminal.escape_brackets(pyWeb.term.get_command());
@@ -98,8 +147,9 @@ var pyWeb = {
     },
 
     paste: (e) => {
-        // Paste text in terminal as though shift + enter was used.
-        // TODO: handle pasting in the middle of a line.
+        // Paste text in terminal as though shift + enter was used between
+        // each line of the pasted text.
+        // TODO: handle pasting in the middle of a line
         e = e.originalEvent;
         if (e.clipboardData.getData) {
             let text = e.clipboardData.getData('text/plain');
@@ -109,7 +159,7 @@ var pyWeb = {
             let lines = text.split("\n");
             lines.forEach( (line, i) => {
                 pyWeb.term.insert(line);
-                if (i != lines.length - 1) {  //  Don't return on last line.
+                if (i != lines.length - 1) {  // skip last line.
                     pyWeb.shift_enter();
                 }
             })
@@ -117,20 +167,47 @@ var pyWeb = {
         return false; // Don't run other paste events :)
     },
 
-    new: (div, options={}) => {
+    new: (div='terminal', options={}) => {
+        /* Initialize pyWeb/pyodide and attach terminal to the specified div.
+        Args:
+            div (str): name of the div to attach the terminal to.
+            options (object): map from option name to option value to override
+                the default options.
+                See the default options in the function body for descriptions.
+        
+        Returns nothing.
+        */
         
         let default_options = {
-            dedent_on_paste: true,  // If true, dedent text when pasting. 
-            tab_to_space: true,  // If true input leading tabs converted to spaces.
-            tab_size: 4,  // How many spaces per tab if tab_to_space.
-            print_to_js_console: true,  // True to push python stdout/stedrr to console.log.
-            output_lines: 10000,  // Number of lines to display.
+            // If true, dedent text when pasting. 
+            dedent_on_paste: true,
+
+            // If true, lines pushed onto buffer have leading tabs 
+            // converted to spaces.
+            tab_to_space: true,
+
+            // How many spaces to use when converting tabs.
+            // Also the number of spaces for auto-indentation when starting
+            // a new line in the terminal.
+            tab_size: 4,
+
+            // True to push python stdout/stedrr to console.log
+            // This has the benefit of being able to see python's output
+            // as it's printed, rather than only seeing it displayed in the
+            // terminal after the python code has been executed.
+            print_to_js_console: true,
+            
+            // Max number of terminal lines.
+            // Changing this after the terminal has been created has no effect.
+            output_lines: 10000,
         }
+
+        // TODO: raise if any provided option has a name not in the defaults.
         pyWeb.options = Object.assign(default_options, options);
 
-
         (function(){
-            // Override console.log and console.error to add terminal echo/error to it.
+            // Override console.log and console.error to add terminal 
+            // echo/error to it.
             // https://stackoverflow.com/a/11403146/8899565
             let oldLog = console.log;
             let oldError = console.error;
@@ -146,8 +223,13 @@ var pyWeb = {
 
         languagePluginLoader.then(() => {
             async function pushCode(line) {
+                // Handle a line being entered in the terminal.
+                
                 pyodide.globals._push(line);
-                while (pyWeb.RUNNING) {await pyWeb.__delay__(1)}  // Wait for running to finish.
+                
+                // Wait for LOCK_TERMINAL to be cleared.
+                while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
+                
                 pyWeb.MAYBE_RUN = true;  // Default back to true.
             }
 
@@ -157,7 +239,7 @@ var pyWeb = {
                     greetings: "Welcome to the Pyodide terminal emulator 🐍",
                     prompt: "[[;grey;]>>> ]",
                     clear: false,  //  disable "clear" command.
-                    outputLimit: pyWeb.options.output_lines,  // Limit number of displayed lines.
+                    outputLimit: pyWeb.options.output_lines,
                     exceptionHandler: (e) => {
                         console.log(e.message);
                         console.log(e.stack);
@@ -176,11 +258,13 @@ var pyWeb = {
             term.bind("paste", pyWeb.paste);
 
             term.echoRaw = function(line) {
+                // Echo with escaped brackets.
                 line = $.terminal.escape_brackets(line);
                 term.echo(line);
             };
 
             term.updateRaw = function(lineno, line) {
+                // update with escaped brackets.
                 line = $.terminal.escape_brackets(line);
                 term.update(lineno, line);
             };
@@ -272,7 +356,7 @@ var pyWeb = {
                             if code.compile_command(line):
                                 return _exec_buffer()
                         except (OverflowError, SyntaxError, ValueError):
-                            pass  # Allow these to occur when the user executes the code.
+                            pass  # Allow these to occur when code is executed.
 
                 # Haven't returned, so more input expected. Set prompt accordingly.
                 term.set_prompt('[[;gray;]... ]')
