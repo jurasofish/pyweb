@@ -313,6 +313,30 @@ var pyWeb = {
             # Redirect stdout and stderr
             _out = sys.stdout = sys.stderr = _StringIORedirect()
 
+            
+            def _ready_to_run(buffer):
+                """ Return True if the buffer of code is ready to run.
+
+                Whether it's "ready to run" is decided based on some heuristics.
+
+                Args:
+                    buffer (list of str): list of buffered lines of code.
+                
+                Returns:
+                    bool: whether code is ready to run.
+                """
+                # Always exec if final line is whitespace.
+                if buffer[-1].split('\n')[-1].strip() == "":
+                    return True
+                
+                # Exec on single line input if it's complete.
+                if len(_buffer) == 1:
+                    try:
+                        if code.compile_command(buffer[0]):
+                            return True
+                    except (OverflowError, SyntaxError, ValueError):
+                        pass  # Allow these to occur later
+
 
             def _push(line):
                 """Add line of code to buffer and maybe execute it.
@@ -345,18 +369,8 @@ var pyWeb = {
 
                 _buffer.append(line)
                 
-                if js.pyWeb.MAYBE_RUN:
-                    # Always exec if final line is whitespace.
-                    if line.split('\n')[-1].strip() == "":
-                        return _exec_buffer()
-                    
-                    # Exec on single line input if it's complete.
-                    if len(_buffer) == 1:
-                        try:
-                            if code.compile_command(line):
-                                return _exec_buffer()
-                        except (OverflowError, SyntaxError, ValueError):
-                            pass  # Allow these to occur when code is executed.
+                if js.pyWeb.MAYBE_RUN and _ready_to_run(_buffer):
+                    return _exec_buffer()
 
                 # Haven't returned, so more input expected. Set prompt accordingly.
                 term.set_prompt('[[;gray;]... ]')
