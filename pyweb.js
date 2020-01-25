@@ -322,7 +322,15 @@ var pyWeb = {
             # Redirect stdout and stderr
             _out = sys.stdout = sys.stderr = _StringIORedirect()
 
-            def busy_wait(dt, clock_src=time.monotonic):   
+            
+            def busy_wait(dt, clock_src=time.monotonic):  
+                """ Busy wait for dt seconds.
+                
+                Args:
+                    dt (float, int): Time in seconds to wait.
+                    clock_src (callable): function returning relative time
+                        in floating point seconds.
+                """ 
                 start_time = clock_src()
                 while (clock_src() < start_time+dt):
                     pass
