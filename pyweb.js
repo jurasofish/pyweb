@@ -322,9 +322,12 @@ var pyWeb = {
             # Redirect stdout and stderr
             _out = sys.stdout = sys.stderr = _StringIORedirect()
 
-            
+
             def busy_wait(dt, clock_src=time.monotonic):  
                 """ Busy wait for dt seconds.
+
+                Let me know if you find a not busyway to wait from pyodide.
+                Maybe using Emscripten Asyncify?
                 
                 Args:
                     dt (float, int): Time in seconds to wait.
