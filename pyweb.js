@@ -38,12 +38,15 @@ var pyWeb = {
 
         Args:
             packageName (str): name of package to load (e.g. "numpy")
+
+        Returns:
+            Promise: resolved after package files are loaded.
         */
 
         // Load package into virtual filesystem and lock the console.
         pyWeb.LOCK_TERMINAL = true;
         pyWeb.REDIRECTCONSOLE = true;  // Display info/errors for user.
-        pyodide.loadPackage(packageName).then(
+        return pyodide.loadPackage(packageName).then(
             (r) => {
                 pyWeb.LOCK_TERMINAL = false;
                 pyWeb.REDIRECTCONSOLE = false;
@@ -175,7 +178,8 @@ var pyWeb = {
                 the default options.
                 See the default options in the function body for descriptions.
         
-        Returns nothing.
+        Returns:
+            Promise: Resolved once pyWeb is ready to use.
         */
         
         let default_options = {
@@ -221,13 +225,18 @@ var pyWeb = {
             };
         })();
 
-        languagePluginLoader.then(() => {
+        let pyodidePromise = languagePluginLoader.then(() => {
             async function pushCode(line) {
                 // Handle a line being entered in the terminal.
+                
+                // Wait for LOCK_TERMINAL to be cleared.
+                while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
                 
                 pyodide.globals._push(line);
                 
                 // Wait for LOCK_TERMINAL to be cleared.
+                // Calling _push may have caused python to run code which may
+                // have set the LOCK_TERMINAL flag.
                 while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
                 
                 pyWeb.MAYBE_RUN = true;  // Default back to true.
@@ -445,5 +454,6 @@ var pyWeb = {
                 }
             `)
         });
+        return pyodidePromise;
     }
 }
