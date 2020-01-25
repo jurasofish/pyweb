@@ -15,8 +15,8 @@ var pyWeb = {
 
     __delay__: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
 
-    loadPackageLocking: (packageName) => {
-        /* Load a package into the virtual filesystem and lock the console.
+    loadPackage: (packageName) => {
+        /* Lock the console while loading a package into the virtual filesystem.
 
         The pyodide loadPackage method is asynchronous, which by default
         would allow the user to enter commands in the terminal
