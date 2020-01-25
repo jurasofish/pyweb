@@ -87,7 +87,7 @@ var pyWeb = {
         
         if(display_input) {
             rawCode = $.terminal.escape_brackets(code);
-            term.echo('[[;gray;]>>> ]' + rawCode);
+            pyWeb.term.echo('[[;gray;]>>> ]' + rawCode);
         }
         let exec_info = pyodide.globals._exec_buffer(code, display_output)
         
@@ -95,7 +95,7 @@ var pyWeb = {
         let prompt = '[[;gray;]>>> ]';
         for (let i=0; i < buffer_len; i++) {
             rawCode = $.terminal.escape_brackets(pyodide.runPython(`_buffer[${i}]`));
-            term.echo(prompt + rawCode);
+            pyWeb.term.echo(prompt + rawCode);
             prompt = '[[;gray;]... ]';  // continuation prompt for subsequent lines.
         }
         if(buffer_len > 0) {term.set_prompt('[[;gray;]... ]')}
@@ -243,7 +243,7 @@ var pyWeb = {
                     exceptionHandler: (e) => {
                         console.log(e.message);
                         console.log(e.stack);
-                        term.error(e.message);
+                        pyWeb.term.error(e.message);
                     },
                     keymap: {
                         "SHIFT+ENTER": pyWeb.shift_enter,
@@ -253,7 +253,6 @@ var pyWeb = {
                 }
             );
             pyWeb.term = term;
-            window.term = term;
 
             term.bind("paste", pyWeb.paste);
 
@@ -275,7 +274,7 @@ var pyWeb = {
             import sys
             import traceback
             import textwrap
-            from js import term, pyodide as pyodidejs, console
+            from js import pyodide as pyodidejs, console, pyWeb
             import pyodide
             import js
 
@@ -303,7 +302,7 @@ var pyWeb = {
                         console.log(data)
                 def display(self):
                     if self.line_buffer:
-                        term.echoRaw(self.line_buffer)
+                        pyWeb.term.echoRaw(self.line_buffer)
                 def clear(self):
                     self.line_buffer = ''
                 def get_output(self):
@@ -373,15 +372,15 @@ var pyWeb = {
                     return _exec_buffer()
 
                 # Haven't returned, so more input expected. Set prompt accordingly.
-                term.set_prompt('[[;gray;]... ]')
+                pyWeb.term.set_prompt('[[;gray;]... ]')
 
                 # Reproduce indentation from previous line.
                 cur_indent = len(_buffer[-1]) - len(_buffer[-1].lstrip())
-                term.insert(cur_indent * ' ')
+                pyWeb.term.insert(cur_indent * ' ')
 
                 # Add more indentation if line ends with a colon.
                 if line and line.strip()[-1] == ':':
-                    term.insert(tab_equiv)
+                    pyWeb.term.insert(tab_equiv)
 
 
             def _exec_buffer(buffer=_buffer, display_output=True):
@@ -421,7 +420,7 @@ var pyWeb = {
                 code_str = "\n".join(buffer)
                 print_repr = len(buffer)==1  # Only if code is a single line.
                 buffer.clear()
-                term.set_prompt('[[;grey;]>>> ]')
+                pyWeb.term.set_prompt('[[;grey;]>>> ]')
                 try:
                     res = pyodide.eval_code(code_str, globals())
                     exc = None
