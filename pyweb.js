@@ -283,6 +283,7 @@ var pyWeb = {
             import sys
             import traceback
             import textwrap
+            import time
             from js import pyodide as pyodidejs, console, pyWeb
             import pyodide
             import js
@@ -320,6 +321,11 @@ var pyWeb = {
             
             # Redirect stdout and stderr
             _out = sys.stdout = sys.stderr = _StringIORedirect()
+
+            def busy_wait(dt, clock_src=time.monotonic):   
+                start_time = clock_src()
+                while (clock_src() < start_time+dt):
+                    pass
 
             
             def _ready_to_run(buffer):
