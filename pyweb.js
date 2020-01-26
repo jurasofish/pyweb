@@ -524,24 +524,7 @@ var pyWeb = {
                 
                 Returns:
                     dict: A dictionary with info about the execution.
-                        The dict has the following structure:
-                        {
-                            'code': The code that was executed.
-                            'output': A string of what the code caused to be
-                                displayed on stdout and stderr.
-                            'result': If the executed code returns a value,
-                                this will be that value. It will follow the
-                                type conversion used by pyodide.
-                                Will be None for no result.
-                            'result_repr': a string representation of result.
-                            'exception': If the code raised an exception,
-                                then this will be the exception object.
-                                Will be None for no exception.
-                            'exception_string': A string representation of the
-                                exception object.
-                                Will be an empty string for no exception.
-                        }
-
+                        See the function body for a description of the dictionary.
                 """
                 if isinstance(buffer, str):
                     buffer = [buffer]
@@ -565,11 +548,28 @@ var pyWeb = {
                 if display_output:
                     _out.display()
                 return {
+                    # The code that was executed.
                     'code': code_str,
+
+                    # A string of what the code caused to be
+                    # displayed on stdout and stderr.
                     'output': _out.get_output(),
+
+                    # If the executed code returns a value, this will be that 
+                    # value. It will follow the type conversion used by pyodide.
+                    # Will be None for no result.
                     'result': res,
+
+                    # A string representation of result.
                     'result_repr': repr(res),
+
+                    # If the code raised an exception, then this will be the
+                    # exception object.
+                    # Will be None for no exception.
                     'exception': exc,
+
+                    # A string representation of the exception object.
+                    # Will be an empty string for no exception.
                     'exception_string': exc_string,
                 }
             `)
