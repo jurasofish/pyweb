@@ -222,6 +222,8 @@ var pyWeb = {
         /* Initialize pyWeb/pyodide and attach terminal to the specified div.
         Args:
             div (str): Element to attach the terminal to.
+                This is passed directly to the jQuery terminal
+                instantiator, so see those docs.
                 For a specific div, use e.g '#terminal', in which case you
                 would need <div id="terminal"></div> in HTML.
                 For fullscreen, use 'body' (might not end up fullscreen 
