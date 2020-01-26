@@ -115,7 +115,18 @@ var pyWeb = {
     },
 
     removeBufferedLines: () => {
-        // Remove buffered lines from terminal
+        /* Remove buffered lines from terminal.
+
+        When multiple lines of python are buffered in the terminal and you
+        you call term.echo() then the echoed text will be placed in the 
+        middle of the buffered lines.
+
+        So, use this function to remove the buffered lines from the terminal,
+        then use term.echo, then use restoreBufferedLines to put the lines
+        back: in this way the echoed text will be displyaed before
+        the buffered python lines.
+
+        */
         let buffer_len = pyodide.runPython('len(_buffer)');
         for (let i=0; i < buffer_len; i++) {
             pyWeb.term.remove_line(-1);
@@ -123,7 +134,7 @@ var pyWeb = {
     },
 
     restoreBufferedLines: () => {
-        // Restore buffered lines to terminal
+        // dual of removeBufferedLines: put buffered lines back in terminal.
         let rawCode;
         let buffer_len = pyodide.runPython('len(_buffer)');
         let prompt = '[[;gray;]>>> ]';
