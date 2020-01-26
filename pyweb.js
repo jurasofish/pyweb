@@ -42,8 +42,6 @@ var pyWeb = {
         to the console, so the console is redirected to python for the duration
         of the loading operation.
 
-        TODO: return the promise from this function for programmatic use.
-
         Args:
             packageName (str): name of package to load (e.g. "numpy")
 
