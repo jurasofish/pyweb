@@ -234,7 +234,15 @@ var pyWeb = {
             output_lines: 10000,
         }
 
-        // TODO: raise if any provided option has a name not in the defaults.
+        // Check that provided options are valid.
+        let orig_keys = Object.keys(default_options);
+        let new_keys = Object.keys(options);
+        let diff = new_keys.filter(x => !orig_keys.includes(x));
+        if (diff.length > 0) {
+            // not critical so don't throw, just display error.
+            console.error(`unknown options provided: ${diff}`)
+        }
+        // update the defaults with the provided options.
         pyWeb.options = Object.assign(default_options, options);
 
         (function(){
