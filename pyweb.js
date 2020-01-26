@@ -587,9 +587,13 @@ var pyWeb = {
                 }
             `)
         }).then(() => {
-            if (pyWeb.options.display_loading_python) {term.echo('Python loaded.\n')}
-            pyWeb.runCode(`print('Python %s on %s' % (sys.version, sys.platform), end='')`,
-                          false)
+            if (pyWeb.options.display_loading_python) {
+                term.echo('Python loaded.\n')
+            }
+            pyWeb.runCode(
+                `print('Python %s on %s' % (sys.version, sys.platform), end='')`,
+                false
+            )
             pyWeb.LOCK_TERMINAL = false;
         }, 
         () => {
