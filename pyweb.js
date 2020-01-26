@@ -306,6 +306,8 @@ var pyWeb = {
         );
         pyWeb.term = term;
 
+        term.echo('Loading Python...')
+
         term.bind("paste", pyWeb.paste);
 
         term.echoRaw = function(line) {
@@ -539,7 +541,15 @@ var pyWeb = {
                     'exception_string': exc_string,
                 }
             `)
-        });
+        }).then(() => {
+            term.echo('Python loaded.')
+            pyWeb.runCode(`print('Python %s on %s' % (sys.version, sys.platform))`,
+                          false)
+        }, 
+        () => {
+            term.echo('Loading Python failed.')
+        }, 
+        )
         return pyodidePromise;
     }
 }
