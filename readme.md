@@ -23,7 +23,7 @@ Returns a promise which resolves once pyWeb is ready for use.
 A light wrapper around pyodide.loadPackage which locks the terminal
 while it's running.
 
-### `pyWeb.runCode(code, [display_input], [display_output])`
+### `pyWeb.runCode(code, [display_input], [display_output], [push_to_history])`
 
 Run python code in the terminal.
 
