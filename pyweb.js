@@ -64,27 +64,6 @@ var pyWeb = {
         );
     },
 
-    removeBufferedLines: () => {
-        // Remove buffered lines from terminal
-        let buffer_len = pyodide.runPython('len(_buffer)');
-        for (let i=0; i < buffer_len; i++) {
-            pyWeb.term.remove_line(-1);
-        }
-    },
-
-    restoreBufferedLines: () => {
-        // Restore buffered lines to terminal
-        let rawCode;
-        let buffer_len = pyodide.runPython('len(_buffer)');
-        let prompt = '[[;gray;]>>> ]';
-        for (let i=0; i < buffer_len; i++) {
-            rawCode = $.terminal.escape_brackets(pyodide.runPython(`_buffer[${i}]`));
-            pyWeb.term.echo(prompt + rawCode);
-            prompt = '[[;gray;]... ]';  // continuation prompt for subsequent lines.
-        }
-        if(buffer_len > 0) {pyWeb.term.set_prompt('[[;gray;]... ]')}
-    },
-
     runCode: (code, display_input=true, display_output=true) => {
         /* Run a string of python code in the terminal.
 
@@ -113,6 +92,27 @@ var pyWeb = {
         let exec_info = pyodide.globals._exec_buffer(code, display_output)
         pyWeb.restoreBufferedLines();
         return exec_info;
+    },
+
+    removeBufferedLines: () => {
+        // Remove buffered lines from terminal
+        let buffer_len = pyodide.runPython('len(_buffer)');
+        for (let i=0; i < buffer_len; i++) {
+            pyWeb.term.remove_line(-1);
+        }
+    },
+
+    restoreBufferedLines: () => {
+        // Restore buffered lines to terminal
+        let rawCode;
+        let buffer_len = pyodide.runPython('len(_buffer)');
+        let prompt = '[[;gray;]>>> ]';
+        for (let i=0; i < buffer_len; i++) {
+            rawCode = $.terminal.escape_brackets(pyodide.runPython(`_buffer[${i}]`));
+            pyWeb.term.echo(prompt + rawCode);
+            prompt = '[[;gray;]... ]';  // continuation prompt for subsequent lines.
+        }
+        if(buffer_len > 0) {pyWeb.term.set_prompt('[[;gray;]... ]')}
     },
 
     shift_enter: () => {
