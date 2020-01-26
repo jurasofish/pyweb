@@ -269,6 +269,57 @@ var pyWeb = {
         // update the defaults with the provided options.
         pyWeb.options = Object.assign(default_options, options);
 
+        async function pushCode(line) {
+            // Handle a line being entered in the terminal.
+            
+            // Wait for LOCK_TERMINAL to be cleared.
+            while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
+            
+            pyodide.globals._push(line);
+            
+            // Wait for LOCK_TERMINAL to be cleared.
+            // Calling _push may have caused python to run code which may
+            // have set the LOCK_TERMINAL flag.
+            while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
+            
+            pyWeb.MAYBE_RUN = true;  // Default back to true.
+        }
+
+        var term = $(div).terminal(
+            pushCode,
+            {
+                greetings: "Welcome to the Pyodide terminal emulator 🐍",
+                prompt: "[[;grey;]>>> ]",
+                clear: false,  //  disable "clear" command.
+                outputLimit: pyWeb.options.output_lines,
+                exceptionHandler: (e) => {
+                    console.log(e.message);
+                    console.log(e.stack);
+                    pyWeb.term.error(e.message);
+                },
+                keymap: {
+                    "SHIFT+ENTER": pyWeb.shift_enter,
+                    "BACKSPACE": pyWeb.backspace,
+                    "CTRL+C": pyWeb.ctrl_c,
+                }
+            }
+        );
+        pyWeb.term = term;
+
+        term.bind("paste", pyWeb.paste);
+
+        term.echoRaw = function(line) {
+            // Echo with escaped brackets.
+            line = $.terminal.escape_brackets(line);
+            term.echo(line);
+        };
+
+        term.updateRaw = function(lineno, line) {
+            // update with escaped brackets.
+            line = $.terminal.escape_brackets(line);
+            term.update(lineno, line);
+        };
+
         (function(){
             // Override console.log and console.error to add terminal 
             // echo/error to it.
@@ -294,56 +345,6 @@ var pyWeb = {
         })();
 
         let pyodidePromise = languagePluginLoader.then(() => {
-            async function pushCode(line) {
-                // Handle a line being entered in the terminal.
-                
-                // Wait for LOCK_TERMINAL to be cleared.
-                while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
-                
-                pyodide.globals._push(line);
-                
-                // Wait for LOCK_TERMINAL to be cleared.
-                // Calling _push may have caused python to run code which may
-                // have set the LOCK_TERMINAL flag.
-                while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
-                
-                pyWeb.MAYBE_RUN = true;  // Default back to true.
-            }
-
-            var term = $(div).terminal(
-                pushCode,
-                {
-                    greetings: "Welcome to the Pyodide terminal emulator 🐍",
-                    prompt: "[[;grey;]>>> ]",
-                    clear: false,  //  disable "clear" command.
-                    outputLimit: pyWeb.options.output_lines,
-                    exceptionHandler: (e) => {
-                        console.log(e.message);
-                        console.log(e.stack);
-                        pyWeb.term.error(e.message);
-                    },
-                    keymap: {
-                        "SHIFT+ENTER": pyWeb.shift_enter,
-                        "BACKSPACE": pyWeb.backspace,
-                        "CTRL+C": pyWeb.ctrl_c,
-                    }
-                }
-            );
-            pyWeb.term = term;
-
-            term.bind("paste", pyWeb.paste);
-
-            term.echoRaw = function(line) {
-                // Echo with escaped brackets.
-                line = $.terminal.escape_brackets(line);
-                term.echo(line);
-            };
-
-            term.updateRaw = function(lineno, line) {
-                // update with escaped brackets.
-                line = $.terminal.escape_brackets(line);
-                term.update(lineno, line);
-            };
 
             pyodide.runPython(String.raw`
             import io
