@@ -218,10 +218,14 @@ var pyWeb = {
         return false; // Don't run other paste events :)
     },
 
-    new: (div='terminal', options={}) => {
+    new: (div='#terminal', options={}) => {
         /* Initialize pyWeb/pyodide and attach terminal to the specified div.
         Args:
-            div (str): name of the div to attach the terminal to.
+            div (str): Element to attach the terminal to.
+                For a specific div, use e.g '#terminal', in which case you
+                would need <div id="terminal"></div> in HTML.
+                For fullscreen, use 'body' (might not end up fullscreen 
+                if you have lots of styling).
             options (object): map from option name to option value to override
                 the default options.
                 See the default options in the function body for descriptions.
@@ -306,7 +310,7 @@ var pyWeb = {
                 pyWeb.MAYBE_RUN = true;  // Default back to true.
             }
 
-            var term = $('#' + div).terminal(
+            var term = $(div).terminal(
                 pushCode,
                 {
                     greetings: "Welcome to the Pyodide terminal emulator 🐍",
