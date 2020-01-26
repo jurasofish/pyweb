@@ -1,5 +1,13 @@
 'use strict';
 
+/*
+todo
+
+Show example of busy wait and printing to console
+Check up on the promise chaining
+don't accept terminal input while python code is running.
+*/
+
 var pyWeb = {
     
     // Wait for LOCK_TERMINAL==false before allowing next console prompt.
