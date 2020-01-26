@@ -12,7 +12,7 @@ check pyodide version.
 var pyWeb = {
     
     // Wait for LOCK_TERMINAL==false before allowing next console prompt.
-    LOCK_TERMINAL: false,
+    LOCK_TERMINAL: true, // Start true and then disable once python is loaded.
     
     // If false the buffer will not be executed when pressing enter.
     MAYBE_RUN: true,
@@ -545,6 +545,7 @@ var pyWeb = {
             term.echo('Python loaded.')
             pyWeb.runCode(`print('Python %s on %s' % (sys.version, sys.platform))`,
                           false)
+            pyWeb.LOCK_TERMINAL = false;
         }, 
         () => {
             term.echo('Loading Python failed.')
