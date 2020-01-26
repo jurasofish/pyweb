@@ -288,7 +288,7 @@ var pyWeb = {
         var term = $(div).terminal(
             pushCode,
             {
-                greetings: "Welcome to the Pyodide terminal emulator 🐍",
+                greetings: "",
                 prompt: "[[;grey;]>>> ]",
                 clear: false,  //  disable "clear" command.
                 outputLimit: pyWeb.options.output_lines,
