@@ -181,7 +181,6 @@ var pyWeb = {
     paste: (e) => {
         // Paste text in terminal as though shift + enter was used between
         // each line of the pasted text.
-        // TODO: handle pasting in the middle of a line
         
         // TODO: pasting in middle of line does not set cursor position
         //       correctly when pasting a multi line string.
@@ -213,7 +212,7 @@ var pyWeb = {
             // Insert right string and move cursor to just before it.
             pyWeb.term.insert(right_cmd);
             for (let i = 0; i < right_cmd.length; i++) {
-                pyWeb.term.invoke_key('CTRL+B')
+                pyWeb.term.invoke_key('CTRL+B');  // Move left.
             }
         }
         return false; // Don't run other paste events :)
