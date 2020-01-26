@@ -509,6 +509,8 @@ var pyWeb = {
                 if line and line.strip()[-1] == ':':
                     pyWeb.term.insert(tab_equiv)
 
+                return None
+
 
             def _exec_buffer(buffer=_buffer, display_output=True):
                 """ Execute and clear the buffer.
