@@ -340,14 +340,14 @@ var pyWeb = {
             _out = sys.stdout = sys.stderr = _StringIORedirect()
 
 
-            def busy_wait(dt, clock_src=time.monotonic):  
-                """ Busy wait for dt seconds.
+            def busy_sleep(dt, clock_src=time.monotonic):  
+                """ Busy sleep for dt seconds.
 
-                Let me know if you find a not busyway to wait from pyodide.
+                Let me know if you find a not busy way to sleep from pyodide.
                 Maybe using Emscripten Asyncify?
                 
                 Args:
-                    dt (float, int): Time in seconds to wait.
+                    dt (float, int): Time in seconds to sleep.
                     clock_src (callable): function returning relative time
                         in floating point seconds.
                 """ 
