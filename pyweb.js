@@ -256,6 +256,16 @@ var pyWeb = {
             // Max number of terminal lines.
             // Changing this after the terminal has been created has no effect.
             output_lines: 10000,
+
+            // True to display info about pyodide and jquery terminal.
+            display_greeting: true,
+
+            // True no display a note when terminal starts about browser 
+            // compatibility.
+            display_browser_version_note: true,
+
+            // True to display "loading python" and "python loaded" in terminal.
+            display_loading_python: true,
         }
 
         // Check that provided options are valid.
@@ -305,8 +315,28 @@ var pyWeb = {
             }
         );
         pyWeb.term = term;
-
-        term.echo('Loading Python...')
+        if (pyWeb.options.display_greeting) {
+            term.echo((
+                `Welcome to the pyWeb console, built on `
+              + `<a target="_blank" `
+              +  `href="https://github.com/iodide-project/pyodide">pyodide</a> `
+              + `and `
+              + `<a target="_blank" `
+              + `href="https://github.com/jcubic/jquery.terminal">`
+              + `jQuery Terminal Emulator</a>. `
+              ),
+                {raw:true}  // allow html
+            )
+            term.echo(''); // newline
+        }
+            
+        if (pyWeb.options.display_browser_version_note) {
+            term.error('Please note that pyWweb/pyodide only works on Chrome and '
+                     + 'Firefox desktop, and probably Firefox Android. '
+                     + 'An incompatible browser will likely hang at '
+                     + '"Loading Python..."\n');
+        }
+        if (pyWeb.options.display_loading_python) {term.echo('Loading Python...')}
 
         term.bind("paste", pyWeb.paste);
 
@@ -542,8 +572,8 @@ var pyWeb = {
                 }
             `)
         }).then(() => {
-            term.echo('Python loaded.')
-            pyWeb.runCode(`print('Python %s on %s' % (sys.version, sys.platform))`,
+            if (pyWeb.options.display_loading_python) {term.echo('Python loaded.\n')}
+            pyWeb.runCode(`print('Python %s on %s' % (sys.version, sys.platform), end='')`,
                           false)
             pyWeb.LOCK_TERMINAL = false;
         }, 
