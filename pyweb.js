@@ -218,7 +218,7 @@ var pyWeb = {
         return false; // Don't run other paste events :)
     },
 
-    new: (div='#terminal', options={}) => {
+    new: (div='body', options={}) => {
         /* Initialize pyWeb/pyodide and attach terminal to the specified div.
         Args:
             div (str): Element to attach the terminal to.
