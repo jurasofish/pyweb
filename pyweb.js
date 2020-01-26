@@ -182,19 +182,39 @@ var pyWeb = {
         // Paste text in terminal as though shift + enter was used between
         // each line of the pasted text.
         // TODO: handle pasting in the middle of a line
+        
+        // TODO: pasting in middle of line does not set cursor position
+        //       correctly when pasting a multi line string.
+        
         e = e.originalEvent;
         if (e.clipboardData.getData) {
             let text = e.clipboardData.getData('text/plain');
             if (pyWeb.options.dedent_on_paste) {
                 text = pyodide.globals.textwrap.dedent(text);
             }
+            
+            // Keep track of text before and after cursor to allow
+            // pasting in middle of line.
+            let full_cmd = pyWeb.term.get_command();
+            let left_cmd = pyWeb.term.before_cursor();
+            let right_cmd = full_cmd.substring(left_cmd.length);
+            pyWeb.term.set_command('');
+            pyWeb.term.insert(left_cmd);
+            
             let lines = text.split("\n");
             lines.forEach( (line, i) => {
                 pyWeb.term.insert(line);
                 if (i != lines.length - 1) {  // skip last line.
                     pyWeb.shift_enter();
+                    pyWeb.term.set_command('');  // clear auto indent.
                 }
-            })
+            });
+
+            // Insert right string and move cursor to just before it.
+            pyWeb.term.insert(right_cmd);
+            for (let i = 0; i < right_cmd.length; i++) {
+                pyWeb.term.invoke_key('CTRL+B')
+            }
         }
         return false; // Don't run other paste events :)
     },
