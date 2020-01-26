@@ -57,16 +57,16 @@ var pyWeb = {
             (r) => {
                 pyWeb.LOCK_TERMINAL = false;
                 pyWeb.REDIRECTCONSOLE = false;
-                pyWeb.removeBufferedLines();
+                pyWeb._removeBufferedLines();
                 pyWeb.term.echoRaw(r);
-                pyWeb.restoreBufferedLines();
+                pyWeb._restoreBufferedLines();
             },
             (r) => {
                 pyWeb.LOCK_TERMINAL = false;
                 pyWeb.REDIRECTCONSOLE = false;
-                pyWeb.removeBufferedLines();
+                pyWeb._removeBufferedLines();
                 pyWeb.term.error(r);
-                pyWeb.restoreBufferedLines();
+                pyWeb._restoreBufferedLines();
             }
         );
     },
@@ -94,7 +94,7 @@ var pyWeb = {
             object: as described in the python _exec() function.
         */
 
-        pyWeb.removeBufferedLines();
+        pyWeb._removeBufferedLines();
         let rawCode;
         if(display_input) {
             let lines = code.split("\n");
@@ -110,11 +110,11 @@ var pyWeb = {
         }
         
         let exec_info = pyodide.globals._exec_buffer(code, display_output)
-        pyWeb.restoreBufferedLines();
+        pyWeb._restoreBufferedLines();
         return exec_info;
     },
 
-    removeBufferedLines: () => {
+    _removeBufferedLines: () => {
         /* Remove buffered lines from terminal.
 
         When multiple lines of python are buffered in the terminal and you
@@ -122,7 +122,7 @@ var pyWeb = {
         middle of the buffered lines.
 
         So, use this function to remove the buffered lines from the terminal,
-        then use term.echo, then use restoreBufferedLines to put the lines
+        then use term.echo, then use _restoreBufferedLines to put the lines
         back: in this way the echoed text will be displyaed before
         the buffered python lines.
 
@@ -133,8 +133,8 @@ var pyWeb = {
         }
     },
 
-    restoreBufferedLines: () => {
-        // dual of removeBufferedLines: put buffered lines back in terminal.
+    _restoreBufferedLines: () => {
+        // dual of _removeBufferedLines: put buffered lines back in terminal.
         let rawCode;
         let buffer_len = pyodide.runPython('len(_buffer)');
         let prompt = '[[;gray;]>>> ]';
@@ -146,7 +146,7 @@ var pyWeb = {
         if(buffer_len > 0) {pyWeb.term.set_prompt('[[;gray;]... ]')}
     },
 
-    shift_enter: () => {
+    _shift_enter: () => {
         // Add a line of code to the buffer without executing and create a
         // continuation line.
         pyWeb.MAYBE_RUN = false;
@@ -156,7 +156,7 @@ var pyWeb = {
         pyWeb.term.exec(cmd, false)
     },
 
-    backspace: (e, orig) => {
+    _backspace: (e, orig) => {
         // This code extends the base backspace method to allow
         // previous lines of the buffer to be removed.
         let cmd = pyWeb.term.get_command();
@@ -174,7 +174,7 @@ var pyWeb = {
         }
     },
 
-    ctrl_c: () => {
+    _ctrl_c: () => {
         // Cancel current input: push currently typed text onto the history
         // and start a fresh line.
         let cmd = pyWeb.term.get_command();
@@ -189,7 +189,7 @@ var pyWeb = {
         pyWeb.term.update(-1, pyWeb.term.get_prompt() + rawCmdReproduce);
     },
 
-    paste: (e) => {
+    _paste: (e) => {
         // Paste text in terminal as though shift + enter was used between
         // each line of the pasted text.
         
@@ -215,7 +215,7 @@ var pyWeb = {
             lines.forEach( (line, i) => {
                 pyWeb.term.insert(line);
                 if (i != lines.length - 1) {  // skip last line.
-                    pyWeb.shift_enter();
+                    pyWeb._shift_enter();
                     pyWeb.term.set_command('');  // clear auto indent.
                 }
             });
@@ -321,9 +321,9 @@ var pyWeb = {
                     pyWeb.term.error(e.message);
                 },
                 keymap: {
-                    "SHIFT+ENTER": pyWeb.shift_enter,
-                    "BACKSPACE": pyWeb.backspace,
-                    "CTRL+C": pyWeb.ctrl_c,
+                    "SHIFT+ENTER": pyWeb._shift_enter,
+                    "BACKSPACE": pyWeb._backspace,
+                    "CTRL+C": pyWeb._ctrl_c,
                 }
             }
         );
@@ -351,7 +351,7 @@ var pyWeb = {
         }
         if (pyWeb.options.display_loading_python) {term.echo('Loading Python...')}
 
-        term.bind("paste", pyWeb.paste);
+        term.bind("paste", pyWeb._paste);
 
         term.echoRaw = function(line) {
             // Echo with escaped brackets.
@@ -373,17 +373,17 @@ var pyWeb = {
             let oldError = console.error;
             console.log = function (message) {
                 if (pyWeb.REDIRECTCONSOLE) {
-                    pyWeb.removeBufferedLines();
+                    pyWeb._removeBufferedLines();
                     pyWeb.term.echoRaw(message)
-                    pyWeb.restoreBufferedLines();
+                    pyWeb._restoreBufferedLines();
                 }
                 oldLog.apply(console, arguments);
             };
             console.error = function (message) {
                 if (pyWeb.REDIRECTCONSOLE) {
-                    pyWeb.removeBufferedLines();
+                    pyWeb._removeBufferedLines();
                     pyWeb.term.error(message)
-                    pyWeb.restoreBufferedLines();
+                    pyWeb._restoreBufferedLines();
                 }
                 oldError.apply(console, arguments);
             };
