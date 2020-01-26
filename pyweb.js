@@ -146,7 +146,7 @@ var pyWeb = {
         pyodide.runPython('_buffer.clear()');
         pyWeb.term.set_command('');
         pyWeb.term.exec('', false);
-        pyWeb.term.update(-1, term.get_prompt() + rawCmdReproduce);
+        pyWeb.term.update(-1, pyWeb.term.get_prompt() + rawCmdReproduce);
     },
 
     paste: (e) => {
