@@ -22,6 +22,11 @@ var pyWeb = {
     //       both true then there's a double up. Fix.
     REDIRECTCONSOLE: false,
 
+    // Set to true when pyWeb is initialized with a call to new().
+    // Used so that subsequent calls to new() do not reinitialize
+    // the python runtime.
+    ALREADY_INIT: false,
+
     __delay__: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
 
     loadPackage: (packageName) => {
@@ -389,216 +394,226 @@ var pyWeb = {
             };
         })();
 
-        let pyodidePromise = languagePluginLoader.then(() => {
+        let pyodidePromise;
+        if (pyWeb.ALREADY_INIT) {
+            console.log('not calling languagePluginLoader again.')
+            pyodidePromise = Promise.resolve();  // empty promise
+        } else {
+            pyWeb.ALREADY_INIT = true;
 
-            pyodide.runPython(String.raw`
-            import io
-            import code
-            import sys
-            import traceback
-            import textwrap
-            import time
-            from js import pyodide as pyodidejs, console, pyWeb
-            import pyodide
-            import js
-
-
-            # buffer lines of code input from the terminal, to be executed later.
-            _buffer = []
-
-
-            class _StringIORedirect(io.StringIO):
-                """ StringIO, but everything is echoed to the terminal.
-                Since while python code is running the browser UI is blocked 
-                (does not re-render), calling term.echo every time data is written
-                is no different to calling term.echo once after the code
-                has been executed with all the data.
-                Hence the use of display() and clear() instead of incrementally
-                calling term.echo().
-                """
-                def __init__(self, *args, **kwargs):
-                    self.line_buffer = ''
-                    super().__init__(*args, **kwargs)
-                def write(self, data, *args, **kwargs):
-                    # super().write(data, *args, **kwargs)
-                    self.line_buffer += data
-                    if js.pyWeb.options.print_to_js_console:
-                        console.log(data)
-                def display(self):
-                    if self.line_buffer:
-                        pyWeb.term.echoRaw(self.line_buffer)
-                def clear(self):
-                    self.line_buffer = ''
-                def get_output(self):
-                    return self.line_buffer
-
-            
-            # Redirect stdout and stderr
-            _out = sys.stdout = sys.stderr = _StringIORedirect()
-
-
-            def busy_sleep(dt, clock_src=time.monotonic):  
-                """ Busy sleep for dt seconds.
-
-                Let me know if you find a not busy way to sleep from pyodide.
-                Maybe using Emscripten Asyncify?
+            pyodidePromise = languagePluginLoader.then(() => {
+    
+                pyodide.runPython(String.raw`
+                import io
+                import code
+                import sys
+                import traceback
+                import textwrap
+                import time
+                from js import pyodide as pyodidejs, console, pyWeb
+                import pyodide
+                import js
+    
+    
+                # buffer lines of code input from the terminal, to be executed later.
+                _buffer = []
+    
+    
+                class _StringIORedirect(io.StringIO):
+                    """ StringIO, but everything is echoed to the terminal.
+                    Since while python code is running the browser UI is blocked 
+                    (does not re-render), calling term.echo every time data is written
+                    is no different to calling term.echo once after the code
+                    has been executed with all the data.
+                    Hence the use of display() and clear() instead of incrementally
+                    calling term.echo().
+                    """
+                    def __init__(self, *args, **kwargs):
+                        self.line_buffer = ''
+                        super().__init__(*args, **kwargs)
+                    def write(self, data, *args, **kwargs):
+                        # super().write(data, *args, **kwargs)
+                        self.line_buffer += data
+                        if js.pyWeb.options.print_to_js_console:
+                            console.log(data)
+                    def display(self):
+                        if self.line_buffer:
+                            pyWeb.term.echoRaw(self.line_buffer)
+                    def clear(self):
+                        self.line_buffer = ''
+                    def get_output(self):
+                        return self.line_buffer
+    
                 
-                Args:
-                    dt (float, int): Time in seconds to sleep.
-                    clock_src (callable): function returning relative time
-                        in floating point seconds.
-                """ 
-                start_time = clock_src()
-                while (clock_src() < start_time+dt):
-                    pass
-
-            
-            def _ready_to_run(buffer):
-                """ Return True if the buffer of code is ready to run.
-
-                Whether it's "ready to run" is decided based on some heuristics.
-
-                Args:
-                    buffer (list of str): list of buffered lines of code.
+                # Redirect stdout and stderr
+                _out = sys.stdout = sys.stderr = _StringIORedirect()
+    
+    
+                def busy_sleep(dt, clock_src=time.monotonic):  
+                    """ Busy sleep for dt seconds.
+    
+                    Let me know if you find a not busy way to sleep from pyodide.
+                    Maybe using Emscripten Asyncify?
+                    
+                    Args:
+                        dt (float, int): Time in seconds to sleep.
+                        clock_src (callable): function returning relative time
+                            in floating point seconds.
+                    """ 
+                    start_time = clock_src()
+                    while (clock_src() < start_time+dt):
+                        pass
+    
                 
-                Returns:
-                    bool: whether code is ready to run.
-                """
-                # Always exec if final line is whitespace.
-                if buffer[-1].split('\n')[-1].strip() == "":
-                    return True
-                
-                # Exec on single line input if it's complete.
-                if len(_buffer) == 1:
+                def _ready_to_run(buffer):
+                    """ Return True if the buffer of code is ready to run.
+    
+                    Whether it's "ready to run" is decided based on some heuristics.
+    
+                    Args:
+                        buffer (list of str): list of buffered lines of code.
+                    
+                    Returns:
+                        bool: whether code is ready to run.
+                    """
+                    # Always exec if final line is whitespace.
+                    if buffer[-1].split('\n')[-1].strip() == "":
+                        return True
+                    
+                    # Exec on single line input if it's complete.
+                    if len(_buffer) == 1:
+                        try:
+                            if code.compile_command(buffer[0]):
+                                return True
+                        except (OverflowError, SyntaxError, ValueError):
+                            pass  # Allow these to occur later
+    
+    
+                def _push(line):
+                    """Add line of code to buffer and maybe execute it.
+    
+                    Leading tabs in the line are replaced with spaces
+                    if the pyWeb tab_to_space option is set.
+    
+                    If the pyWeb flag MAYBE_RUN is set then the buffer might
+                    be executed after the line is pushed. See function body
+                    for logic of how this is decided.
+                    If MAYBE_RUN is false, the buffer will not be executed.
+    
+                    Args:
+                        line (str): A string of code to be pushed onto the buffer.
+    
+                    Returns:
+                        If the buffer is executed, then the return value
+                        of _exec() is returned.
+                        If the buffer is not executed, None is returned.
+                    """
+    
+                    # Equivalent to one tab, in spaces.
+                    tab_equiv = ' '*js.pyWeb.options.tab_size
+                    
+                    # replace leading tabs with spaces
+                    if line and js.pyWeb.options.tab_to_space:
+                        white_count = len(line) - len(line.lstrip())
+                        white_expanded = line[:white_count].replace('\t', tab_equiv)
+                        line = white_expanded + line[white_count:]
+    
+                    _buffer.append(line)
+                    
+                    if js.pyWeb.MAYBE_RUN and _ready_to_run(_buffer):
+                        return _exec_buffer()
+    
+                    # Haven't returned, so more input expected. Set prompt accordingly.
+                    pyWeb.term.set_prompt('[[;gray;]... ]')
+    
+                    # Reproduce indentation from previous line.
+                    cur_indent = len(_buffer[-1]) - len(_buffer[-1].lstrip())
+                    pyWeb.term.insert(cur_indent * ' ')
+    
+                    # Add more indentation if line ends with a colon.
+                    if line and line.strip()[-1] == ':':
+                        pyWeb.term.insert(tab_equiv)
+    
+                    return None
+    
+    
+                def _exec_buffer(buffer=_buffer, display_output=True):
+                    """ Execute and clear the buffer.
+    
+                    Args:
+                        buffer (str or list of str): The code to be joined by
+                            "\n" and executed. This buffer will be cleared in-place.
+                            Can be a list of strings, or a string.
+                        display_output (bool): True to push stdout and stderr
+                            onto the pyWeb terminal.
+                    
+                    Returns:
+                        dict: A dictionary with info about the execution.
+                            See the function body for a description of the dictionary.
+                    """
+                    if isinstance(buffer, str):
+                        buffer = [x for x in buffer.split('\n')]
+                    _out.clear()  # Clear previous stdout/stderr.
+                    code_str = "\n".join(buffer)
+                    print_repr = len(buffer)==1  # Only if code is a single line.
+                    buffer.clear()
+                    pyWeb.term.set_prompt('[[;grey;]>>> ]')
                     try:
-                        if code.compile_command(buffer[0]):
-                            return True
-                    except (OverflowError, SyntaxError, ValueError):
-                        pass  # Allow these to occur later
-
-
-            def _push(line):
-                """Add line of code to buffer and maybe execute it.
-
-                Leading tabs in the line are replaced with spaces
-                if the pyWeb tab_to_space option is set.
-
-                If the pyWeb flag MAYBE_RUN is set then the buffer might
-                be executed after the line is pushed. See function body
-                for logic of how this is decided.
-                If MAYBE_RUN is false, the buffer will not be executed.
-
-                Args:
-                    line (str): A string of code to be pushed onto the buffer.
-
-                Returns:
-                    If the buffer is executed, then the return value
-                    of _exec() is returned.
-                    If the buffer is not executed, None is returned.
-                """
-
-                # Equivalent to one tab, in spaces.
-                tab_equiv = ' '*js.pyWeb.options.tab_size
-                
-                # replace leading tabs with spaces
-                if line and js.pyWeb.options.tab_to_space:
-                    white_count = len(line) - len(line.lstrip())
-                    white_expanded = line[:white_count].replace('\t', tab_equiv)
-                    line = white_expanded + line[white_count:]
-
-                _buffer.append(line)
-                
-                if js.pyWeb.MAYBE_RUN and _ready_to_run(_buffer):
-                    return _exec_buffer()
-
-                # Haven't returned, so more input expected. Set prompt accordingly.
-                pyWeb.term.set_prompt('[[;gray;]... ]')
-
-                # Reproduce indentation from previous line.
-                cur_indent = len(_buffer[-1]) - len(_buffer[-1].lstrip())
-                pyWeb.term.insert(cur_indent * ' ')
-
-                # Add more indentation if line ends with a colon.
-                if line and line.strip()[-1] == ':':
-                    pyWeb.term.insert(tab_equiv)
-
-                return None
-
-
-            def _exec_buffer(buffer=_buffer, display_output=True):
-                """ Execute and clear the buffer.
-
-                Args:
-                    buffer (str or list of str): The code to be joined by
-                        "\n" and executed. This buffer will be cleared in-place.
-                        Can be a list of strings, or a string.
-                    display_output (bool): True to push stdout and stderr
-                        onto the pyWeb terminal.
-                
-                Returns:
-                    dict: A dictionary with info about the execution.
-                        See the function body for a description of the dictionary.
-                """
-                if isinstance(buffer, str):
-                    buffer = [x for x in buffer.split('\n')]
-                _out.clear()  # Clear previous stdout/stderr.
-                code_str = "\n".join(buffer)
-                print_repr = len(buffer)==1  # Only if code is a single line.
-                buffer.clear()
-                pyWeb.term.set_prompt('[[;grey;]>>> ]')
-                try:
-                    res = pyodide.eval_code(code_str, globals())
-                    exc = None
-                    exc_string = ''
-                except Exception as e:
-                    res = None
-                    exc = e
-                    exc_string = traceback.format_exc()
+                        res = pyodide.eval_code(code_str, globals())
+                        exc = None
+                        exc_string = ''
+                    except Exception as e:
+                        res = None
+                        exc = e
+                        exc_string = traceback.format_exc()
+                        if display_output:
+                            print(exc_string, file=sys.stderr, end='')
+                    if print_repr and display_output and res is not None:
+                        print(repr(res), end='')
                     if display_output:
-                        print(exc_string, file=sys.stderr, end='')
-                if print_repr and display_output and res is not None:
-                    print(repr(res), end='')
-                if display_output:
-                    _out.display()
-                return {
-                    # The code that was executed.
-                    'code': code_str,
-
-                    # A string of what the code caused to be
-                    # displayed on stdout and stderr.
-                    'output': _out.get_output(),
-
-                    # If the executed code returns a value, this will be that 
-                    # value. It will follow the type conversion used by pyodide.
-                    # Will be None for no result.
-                    'result': res,
-
-                    # A string representation of result.
-                    'result_repr': repr(res),
-
-                    # If the code raised an exception, then this will be the
-                    # exception object.
-                    # Will be None for no exception.
-                    'exception': exc,
-
-                    # A string representation of the exception object.
-                    # Will be an empty string for no exception.
-                    'exception_string': exc_string,
+                        _out.display()
+                    return {
+                        # The code that was executed.
+                        'code': code_str,
+    
+                        # A string of what the code caused to be
+                        # displayed on stdout and stderr.
+                        'output': _out.get_output(),
+    
+                        # If the executed code returns a value, this will be that 
+                        # value. It will follow the type conversion used by pyodide.
+                        # Will be None for no result.
+                        'result': res,
+    
+                        # A string representation of result.
+                        'result_repr': repr(res),
+    
+                        # If the code raised an exception, then this will be the
+                        # exception object.
+                        # Will be None for no exception.
+                        'exception': exc,
+    
+                        # A string representation of the exception object.
+                        # Will be an empty string for no exception.
+                        'exception_string': exc_string,
+                    }
+                `)
+            })
+        }
+        pyodidePromise.then(
+            () => {
+                if (pyWeb.options.display_loading_python) {
+                    term.echo('Python loaded.\n')
                 }
-            `)
-        }).then(() => {
-            if (pyWeb.options.display_loading_python) {
-                term.echo('Python loaded.\n')
-            }
-            pyWeb.runCode(
-                `print('Python %s on %s' % (sys.version, sys.platform), end='')`,
-                false
-            )
-            pyWeb.LOCK_TERMINAL = false;
-        }, 
-        () => {
-            term.echo('Loading Python failed.')
-        }, 
+                pyWeb.runCode(
+                    `print('Python %s on %s' % (sys.version, sys.platform), end='')`,
+                    false
+                )
+                pyWeb.LOCK_TERMINAL = false;
+            }, 
+            () => {
+                term.echo('Loading Python failed.')
+            }, 
         )
         return pyodidePromise;
     }
