@@ -76,8 +76,7 @@ var pyWeb = {
         );
     },
 
-    runCode: (code, display_input=true, display_output=true,
-              push_to_history=false) => {
+    runCode: (code, options={}) => {
         /* Run a string of python code in the terminal.
 
         This is intended as an external API to pyWeb, allowing developers
@@ -86,35 +85,43 @@ var pyWeb = {
 
         Args:
             code (str): string of code to execute. Can be multiline.
-            display_input (bool): True to display the code in the terminal
-                as though the user had typed it.
-            display_output (bool): True to allow the stdout and stderr
-                resulting from the code to be displayed in the terminal.
-             push_to_history(bool): if display_input and push_to_history
-                are both true then split the input code by "\n"
-                and push each line onto the terminal history - just as if
-                they had been typed in manually.
+            options (object): See function body for descriptions.
 
         Returns:
             object: as described in the python _exec() function.
         */
+       let default_options = {
+           // display the code in the terminal as though the user had typed it.
+           display_input: true,
+
+           // True to allow the stdout and stderr
+           // resulting from the code to be displayed in the terminal.
+           display_output: true, 
+
+            // if display_input and push_to_history
+            // are both true then split the input code by "\n"
+            // and push each line onto the terminal history - just as if
+            // they had been typed in manually.
+           push_to_history: true
+        }
+        options = Object.assign(default_options, options);
 
         pyWeb._removeBufferedLines();
         let rawCode;
-        if(display_input) {
+        if(options.display_input) {
             let lines = code.split("\n");
             let prompt = '>>> '
             lines.forEach( line => {
                 rawCode = $.terminal.escape_brackets(line);
                 pyWeb.term.echo(prompt + rawCode);
-                if (push_to_history) {
+                if (options.push_to_history) {
                     pyWeb.term.history().append(line);
                 }
                 prompt = '... ';  // The prompt for subsequent lines.
             })
         }
         
-        let exec_info = pyodide.globals._exec_buffer(code, display_output)
+        let exec_info = pyodide.globals._exec_buffer(code, options.display_output)
         pyWeb._restoreBufferedLines();
         return exec_info;
     },
