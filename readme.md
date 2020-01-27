@@ -14,9 +14,21 @@ pyWeb creates a single `pyWeb` global in javascript, along with the `pyodide` gl
 
 ### `pyWeb.new(div, [options])`
 
-Initialize pyWeb, and attach the terminal to the specified div.
-options overrides the default options.
-Returns a promise which resolves once pyWeb is ready for use.
+Initialize pyWeb/pyodide and attach terminal to the specified div.
+        Args:
+            div (str): Element to attach the terminal to.
+                This is passed directly to the jQuery terminal
+                instantiator, so see those docs.
+                For a specific div, use e.g '#terminal', in which case you
+                would need <div id="terminal"></div> in HTML.
+                For fullscreen, use 'body' (might not end up fullscreen 
+                if you have lots of styling).
+            options (object): map from option name to option value to override
+                the default options.
+                See the default options in the function body for descriptions.
+        
+        Returns:
+            Promise: Resolved once pyWeb is ready to use.
 
 ### `pyWeb.loadPackage(packageName)`
 
