@@ -94,6 +94,9 @@ var pyWeb = {
             object: as described in the python _exec() function.
         */
        let default_options = {
+           // True to dedent code before running and displaying it.
+           dedent_code: true,
+
            // display the code in the terminal as though the user had typed it.
            display_input: true,
 
@@ -108,6 +111,10 @@ var pyWeb = {
            push_to_history: true
         }
         options = Object.assign(default_options, options);
+
+        if (options.dedent_code) {
+            code = pyodide.globals.textwrap.dedent(code);
+        }
 
         pyWeb._removeBufferedLines();
         let rawCode;
