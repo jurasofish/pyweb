@@ -133,6 +133,7 @@ var pyWeb = {
         // Clear the terminal contents and the current buffer.
         pyWeb.term.clear()
         pyodide.runPython('_buffer.clear()')
+        pyWeb.term.set_prompt('>>> ')
     },
 
     _removeBufferedLines: () => {
