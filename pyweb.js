@@ -225,6 +225,8 @@ var pyWeb = {
         
         // TODO: pasting in middle of line does not set cursor position
         //       correctly when pasting a multi line string.
+
+        // Blank characters are messed up on the final line.
         
         e = e.originalEvent;
         if (e.clipboardData.getData) {
