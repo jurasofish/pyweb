@@ -560,7 +560,7 @@ var pyWeb = {
                     pyWeb.term.insert(cur_indent * ' ')
     
                     # Add more indentation if line ends with a colon.
-                    if line and line.strip()[-1] == ':':
+                    if line.strip() and line.strip()[-1] == ':':
                         pyWeb.term.insert(tab_equiv)
     
                     return None
