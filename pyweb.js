@@ -540,7 +540,7 @@ var pyWeb = {
                         See the function body for a description of the dictionary.
                 """
                 if isinstance(buffer, str):
-                    buffer = [buffer]
+                    buffer = [x for x in buffer.split('\n')]
                 _out.clear()  # Clear previous stdout/stderr.
                 code_str = "\n".join(buffer)
                 print_repr = len(buffer)==1  # Only if code is a single line.
