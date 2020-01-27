@@ -126,7 +126,7 @@ describe('pyWeb can', ()=>{
         pyWeb.term.history().clear();
         exec_res = pyWeb.runCode(code, options);
 
-        expect(exec_res.code).toBe(code);
+        expect(exec_res.code).toBe(pyodide.globals.textwrap.dedent(code));
         expect(exec_res.output).toBe('1\n2\n');
         expect(exec_res.result).toBe(5);
         expect(exec_res.result_repr).toBe('5');
@@ -144,7 +144,7 @@ describe('pyWeb can', ()=>{
         code_lines = code_lines.map(x => x[0]);
         code_lines = code_lines.map(x => x.substring(4)); // Remove prompt.
         recon_code = code_lines.join('\n');
-        expect(recon_code).toBe(code);
+        expect(recon_code).toBe(pyodide.globals.textwrap.dedent(code));
 
         // Check that the code was NOT pushed onto history
         // note we cleared the history earlier
