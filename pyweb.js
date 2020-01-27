@@ -103,14 +103,14 @@ var pyWeb = {
         let rawCode;
         if(display_input) {
             let lines = code.split("\n");
-            let prompt = '[[;gray;]>>> ]'
+            let prompt = '>>> '
             lines.forEach( line => {
                 rawCode = $.terminal.escape_brackets(line);
                 pyWeb.term.echo(prompt + rawCode);
                 if (push_to_history) {
                     pyWeb.term.history().append(line);
                 }
-                prompt = '[[;gray;]... ]';  // The prompt for subsequent lines.
+                prompt = '... ';  // The prompt for subsequent lines.
             })
         }
         
@@ -142,13 +142,13 @@ var pyWeb = {
         // dual of _removeBufferedLines: put buffered lines back in terminal.
         let rawCode;
         let buffer_len = pyodide.runPython('len(_buffer)');
-        let prompt = '[[;gray;]>>> ]';
+        let prompt = '>>> ';
         for (let i=0; i < buffer_len; i++) {
             rawCode = $.terminal.escape_brackets(pyodide.runPython(`_buffer[${i}]`));
             pyWeb.term.echo(prompt + rawCode);
-            prompt = '[[;gray;]... ]';  // continuation prompt for subsequent lines.
+            prompt = '... ';  // continuation prompt for subsequent lines.
         }
-        if(buffer_len > 0) {pyWeb.term.set_prompt('[[;gray;]... ]')}
+        if(buffer_len > 0) {pyWeb.term.set_prompt('... ')}
     },
 
     _shift_enter: () => {
@@ -174,7 +174,7 @@ var pyWeb = {
             let new_cmd = pyodide.runPython('_buffer.pop()');
             pyWeb.term.set_command(new_cmd)
             if (buffer_len == 1) {
-                pyWeb.term.set_prompt('[[;gray;]>>> ]');
+                pyWeb.term.set_prompt('>>> ');
             }
         }
     },
@@ -317,7 +317,7 @@ var pyWeb = {
             pushCode,
             {
                 greetings: "",
-                prompt: "[[;grey;]>>> ]",
+                prompt: ">>> ",
                 clear: false,  //  disable "clear" command.
                 outputLimit: pyWeb.options.output_lines,
                 exceptionHandler: (e) => {
@@ -524,7 +524,7 @@ var pyWeb = {
                         return _exec_buffer()
     
                     # Haven't returned, so more input expected. Set prompt accordingly.
-                    pyWeb.term.set_prompt('[[;gray;]... ]')
+                    pyWeb.term.set_prompt('... ')
     
                     # Reproduce indentation from previous line.
                     cur_indent = len(_buffer[-1]) - len(_buffer[-1].lstrip())
@@ -557,7 +557,7 @@ var pyWeb = {
                     code_str = "\n".join(buffer)
                     print_repr = len(buffer)==1  # Only if code is a single line.
                     buffer.clear()
-                    pyWeb.term.set_prompt('[[;grey;]>>> ]')
+                    pyWeb.term.set_prompt('>>> ')
                     try:
                         res = pyodide.eval_code(code_str, globals())
                         exc = None
