@@ -27,6 +27,10 @@ var pyWeb = {
     // the python runtime.
     ALREADY_INIT: false,
 
+    // Keep track of how many times it has been requested to remove/restore
+    // the buffered lines, and only actually do it when at zero.
+    BUFFERED_LINES_REMOVED: 0,
+
     __delay__: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
 
     loadPackage: (packageName) => {
@@ -139,23 +143,30 @@ var pyWeb = {
         the buffered python lines.
 
         */
-        let buffer_len = pyodide.runPython('len(_buffer)');
-        for (let i=0; i < buffer_len; i++) {
-            pyWeb.term.remove_line(-1);
+        if (pyWeb.BUFFERED_LINES_REMOVED == 0) {
+            let buffer_len = pyodide.runPython('len(_buffer)');
+            for (let i=0; i < buffer_len; i++) {
+                pyWeb.term.remove_line(-1);
+            }
         }
+        pyWeb.BUFFERED_LINES_REMOVED--;
     },
 
     _restoreBufferedLines: () => {
         // dual of _removeBufferedLines: put buffered lines back in terminal.
-        let rawCode;
-        let buffer_len = pyodide.runPython('len(_buffer)');
-        let prompt = '>>> ';
-        for (let i=0; i < buffer_len; i++) {
-            rawCode = $.terminal.escape_brackets(pyodide.runPython(`_buffer[${i}]`));
-            pyWeb.term.echo(prompt + rawCode);
-            prompt = '... ';  // continuation prompt for subsequent lines.
+        
+        pyWeb.BUFFERED_LINES_REMOVED++;
+        if (pyWeb.BUFFERED_LINES_REMOVED == 0) {
+            let rawCode;
+            let buffer_len = pyodide.runPython('len(_buffer)');
+            let prompt = '>>> ';
+            for (let i=0; i < buffer_len; i++) {
+                rawCode = $.terminal.escape_brackets(pyodide.runPython(`_buffer[${i}]`));
+                pyWeb.term.echo(prompt + rawCode);
+                prompt = '... ';  // continuation prompt for subsequent lines.
+            }
+            if(buffer_len > 0) {pyWeb.term.set_prompt('... ')}
         }
-        if(buffer_len > 0) {pyWeb.term.set_prompt('... ')}
     },
 
     _shift_enter: () => {
