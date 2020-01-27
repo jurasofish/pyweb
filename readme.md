@@ -15,6 +15,7 @@ pyWeb creates a single `pyWeb` global in javascript, along with the `pyodide` gl
 ### `pyWeb.new(div, [options])`
 
 Initialize pyWeb/pyodide and attach terminal to the specified div.
+
         Args:
             div (str): Element to attach the terminal to.
                 This is passed directly to the jQuery terminal
