@@ -13,8 +13,10 @@ https://jurasofish.github.io/pyweb/
 pyWeb creates a single `pyWeb` global in javascript, along with the `pyodide` global.
 
 ### `pyWeb.new(div, [options])`
-
+```
 Initialize pyWeb/pyodide and attach terminal to the specified div.
+Calling this more than once is not well tested, but should reset
+the terminal, while leaving the python runtime untouched.
 
         Args:
             div (str): Element to attach the terminal to.
@@ -33,7 +35,6 @@ Initialize pyWeb/pyodide and attach terminal to the specified div.
 
 The default options are 
 
-```
 default_options = {
             // If true, dedent text when pasting. 
             dedent_on_paste: true,
@@ -71,8 +72,33 @@ default_options = {
 
 ### `pyWeb.loadPackage(packageName)`
 
-A light wrapper around pyodide.loadPackage which locks the terminal
-while it's running.
+```
+Lock the console while loading a package into the virtual filesystem.
+
+This is a light wrapper around pyodide.loadPackage.
+
+The pyodide loadPackage method is asynchronous, which by default
+would allow the user to enter commands in the terminal
+immediately after calling it despite the package files not being
+loaded yet. This causes confusion for the user: loading
+package files should appear to be a synchronous blocking operation.
+
+This function sets the LOCK_TERMINAL flag and then clears it after the 
+loadPackage promise resolve. This has the effect of causing the terminal
+to wait while the package is loaded., which causes the terminal
+to wait (lowkey busy wait, sorry) until the package is loaded before
+allowing the user to enter more input.
+
+The pyodide loadPackage method also spits out essential information
+to the console, so the console is redirected to python for the duration
+of the loading operation.
+
+Args:
+    packageName (str): name of package to load (e.g. "numpy")
+
+Returns:
+    Promise: resolved after package files are loaded.
+```
 
 ### `pyWeb.runCode(code, [display_input], [display_output], [push_to_history])`
 

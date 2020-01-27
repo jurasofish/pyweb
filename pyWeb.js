@@ -34,6 +34,8 @@ var pyWeb = {
 
     loadPackage: (packageName) => {
         /* Lock the console while loading a package into the virtual filesystem.
+        
+        This is a light wrapper around pyodide.loadPackage.
 
         The pyodide loadPackage method is asynchronous, which by default
         would allow the user to enter commands in the terminal
@@ -270,6 +272,8 @@ var pyWeb = {
 
     new: (div='body', options={}) => {
         /* Initialize pyWeb/pyodide and attach terminal to the specified div.
+        Calling this more than once is not well tested, but should reset
+        the terminal, while leaving the python runtime untouched.
         Args:
             div (str): Element to attach the terminal to.
                 This is passed directly to the jQuery terminal
