@@ -18,8 +18,6 @@ var pyWeb = {
     MAYBE_RUN: true,
     
     // True to redirect javascript console log/error to terminal.
-    // TODO: if REDIRECTCONSOLE and pyWeb.options.print_to_js_console are
-    //       both true then there's a double up. Fix.
     REDIRECTCONSOLE: false,
 
     // Set to true when pyWeb is initialized with a call to new().
@@ -453,7 +451,12 @@ var pyWeb = {
                         # super().write(data, *args, **kwargs)
                         self.line_buffer += data
                         if js.pyWeb.options.print_to_js_console:
+                            # disable REDIRECTCONSOLE while logging to console
+                            # to prevent double print in the python terminal.
+                            old_REDIRECTCONSOLE = pyWeb.REDIRECTCONSOLE
+                            pyWeb.REDIRECTCONSOLE = False;
                             console.log(data)
+                            pyWeb.REDIRECTCONSOLE = old_REDIRECTCONSOLE;
                     def display(self):
                         if self.line_buffer:
                             pyWeb.term.echoRaw(self.line_buffer)
