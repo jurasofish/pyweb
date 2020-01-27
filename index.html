@@ -25,18 +25,79 @@
             width:50%;
             min-height:100%;
         }
+        #sometext {
+            padding: 3px;
+        }
         </style>
   </head>
   <body>
-    <!-- <div id="terminal"></div> -->
     <div id="terminal"></div>
     <div id = "right">
         <div id = "sometext">change me</div>
+        <input type="button" id="changetext-button" value="Click to change text"">
+        <br/><br/><br/>
+        <input type="button" id="createcanvas-button" 
+        value="Click to create a drawable canvas"">
+
     </div>
     <script src="pyWeb.js"></script>
     <script>
         pyWeb.new('#terminal').then( () => {
+            document.getElementById("changetext-button").onclick = () => {
+                pyWeb.runCode('js.sometext.innerHTML += "a"')
+            }
             
+            document.getElementById("createcanvas-button").onclick = () => {
+                pyWeb.runCode(String.raw`
+                # nicked from the iodide example notebook.
+
+                info = js.document.createElement('div')
+                info.id = 'canvas-info'
+                info.innerHTML = 'Draw on the canvas'
+                js.right.appendChild(info)
+
+                canvas = js.document.createElement('canvas')
+                canvas.id = 'canvas'
+                js.right.appendChild(canvas)
+                dim = int(canvas.parentElement.offsetWidth*0.9)
+                canvas.setAttribute('width', dim)
+                canvas.setAttribute('height', dim)
+                canvas.style.border = '3px solid #c61bfa'
+                context = canvas.getContext("2d")
+                context.strokeStyle = "#df4b26"
+                context.lineJoin = "round"
+                context.lineWidth = 8
+                pen = False
+                lastPoint = (0, 0)
+
+                def onmousemove(e):
+                    global lastPoint
+                    if pen:
+                        newPoint = (e.offsetX, e.offsetY)
+                        context.beginPath()
+                        context.moveTo(lastPoint[0], lastPoint[1])
+                        context.lineTo(newPoint[0], newPoint[1])
+                        context.closePath()
+                        context.stroke()
+                        lastPoint = newPoint
+                    
+                def onmousedown(e):
+                    global pen, lastPoint
+                    pen = True
+                    lastPoint = (e.offsetX, e.offsetY)
+                
+                def onmouseup(e):
+                    global pen
+                    pen = False
+
+                canvas.addEventListener('mousemove', onmousemove)
+                canvas.addEventListener('mousedown', onmousedown)
+                canvas.addEventListener('mouseup', onmouseup)
+                `)
+            }
+
+
+
         })
         /*
         pyWeb.new('terminal').then( () => {
