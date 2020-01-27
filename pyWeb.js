@@ -86,14 +86,16 @@ var pyWeb = {
 
         This is intended as an external API to pyWeb, allowing developers
         to run commands in the terminal as though they were typed by
-        a user.
+        a user - or not.
 
         Args:
             code (str): string of code to execute. Can be multiline.
-            options (object): See function body for descriptions.
+            options (object): Map from option name to value to overried
+                the default optins. See function body for defaults and
+                descriptions.
 
         Returns:
-            object: as described in the python _exec() function.
+            object: As described in the python _exec() function.
         */
        let default_options = {
            // True to dedent code before running and displaying it.
@@ -139,7 +141,7 @@ var pyWeb = {
     },
 
     clear: () => {
-        // Clear the terminal contents and the current buffer.
+        // Clear the terminal and any partially entered commands.
         pyWeb.term.clear()
         pyWeb.term.set_command('');
         pyodide.runPython('_buffer.clear()')
@@ -294,8 +296,7 @@ var pyWeb = {
             // If true, dedent text when pasting. 
             dedent_on_paste: true,
 
-            // If true, lines pushed onto buffer have leading tabs 
-            // converted to spaces.
+            // If true, lines typed at the console have tabs converted to spaces.
             tab_to_space: true,
 
             // How many spaces to use when converting tabs.
@@ -313,10 +314,11 @@ var pyWeb = {
             // Changing this after the terminal has been created has no effect.
             output_lines: 10000,
 
-            // True to display info about pyodide and jquery terminal.
+            // True to display info about pyodide and jquery terminal when
+            // the terminal is created.
             display_greeting: true,
 
-            // True no display a note when terminal starts about browser 
+            // True to display a note when terminal starts about browser 
             // compatibility.
             display_browser_version_note: true,
 

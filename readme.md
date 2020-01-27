@@ -35,12 +35,11 @@ the terminal, while leaving the python runtime untouched.
 
 The default options are 
 
-default_options = {
+        let default_options = {
             // If true, dedent text when pasting. 
             dedent_on_paste: true,
 
-            // If true, lines pushed onto buffer have leading tabs 
-            // converted to spaces.
+            // If true, lines typed at the console have tabs converted to spaces.
             tab_to_space: true,
 
             // How many spaces to use when converting tabs.
@@ -58,10 +57,11 @@ default_options = {
             // Changing this after the terminal has been created has no effect.
             output_lines: 10000,
 
-            // True to display info about pyodide and jquery terminal.
+            // True to display info about pyodide and jquery terminal when
+            // the terminal is created.
             display_greeting: true,
 
-            // True no display a note when terminal starts about browser 
+            // True to display a note when terminal starts about browser 
             // compatibility.
             display_browser_version_note: true,
 
@@ -100,13 +100,48 @@ Returns:
     Promise: resolved after package files are loaded.
 ```
 
-### `pyWeb.runCode(code, [display_input], [display_output], [push_to_history])`
+### `pyWeb.runCode(code, [options])`
 
-Run python code in the terminal.
+```
+/* Run a string of python code in the terminal.
+
+This is intended as an external API to pyWeb, allowing developers
+to run commands in the terminal as though they were typed by
+a user - or not.
+
+Args:
+    code (str): string of code to execute. Can be multiline.
+    options (object): Map from option name to value to overried
+        the default optins. See function body for defaults and
+        descriptions.
+
+Returns:
+    object: As described in the python _exec() function.
+
+The default options are 
+
+let default_options = {
+    // True to dedent code before running and displaying it.
+    dedent_code: true,
+
+    // display the code in the terminal as though the user had typed it.
+    display_input: true,
+
+    // True to allow the stdout and stderr
+    // resulting from the code to be displayed in the terminal.
+    display_output: true, 
+
+    // if display_input and push_to_history
+    // are both true then split the input code by "\n"
+    // and push each line onto the terminal history - just as if
+    // they had been typed in manually.
+    push_to_history: true
+}
+```
 
 ### `pyWeb.clear()`
 
-Clears the console and any partially entered commands.
+Clear the terminal and any partially entered commands.
 
 ## Python API
 
@@ -125,4 +160,4 @@ Same as the javascript version, since these are merely references to them.
 
 ### `busy_sleep(dt, clock_src=time.monotonic)`
 
-sleep for dt seconds
+sleep for dt seconds while consuming max cpu.
