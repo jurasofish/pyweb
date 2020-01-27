@@ -7,6 +7,7 @@ Show example of busy wait and printing to console
 Check up on the promise chaining
 don't accept terminal input while python code is running.
 check pyodide version.
+backspace to previous line when cursor is partway through the line.
 */
 
 var pyWeb = {
