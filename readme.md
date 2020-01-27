@@ -27,6 +27,10 @@ while it's running.
 
 Run python code in the terminal.
 
+### `pyWeb.clear()`
+
+Clears the console and any partially entered commands.
+
 ## Python API
 
 pyWeb creates the following global variables in python
@@ -38,9 +42,9 @@ pyWeb creates the following global variables in python
  - `console`: A reference to the JavaScript console, so you can `console.log(x)` from python
  - `busy_sleep`: A sleep function.
 
-### `pyWeb.loadPackage(packageName)`
+### `pyWeb.loadPackage(packageName), pyWeb.clear()`
 
-Same as the javascript version, since this is merely a reference to it.
+Same as the javascript version, since these are merely references to them.
 
 ### `busy_sleep(dt, clock_src=time.monotonic)`
 

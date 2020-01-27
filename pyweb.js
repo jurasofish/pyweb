@@ -128,6 +128,12 @@ var pyWeb = {
         return exec_info;
     },
 
+    clear: () => {
+        // Clear the terminal contents and the current buffer.
+        pyWeb.term.clear()
+        pyodide.runPython('_buffer.clear()')
+    },
+
     _removeBufferedLines: () => {
         /* Remove buffered lines from terminal.
 
