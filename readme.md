@@ -31,6 +31,44 @@ Initialize pyWeb/pyodide and attach terminal to the specified div.
         Returns:
             Promise: Resolved once pyWeb is ready to use.
 
+The default options are 
+
+```
+default_options = {
+            // If true, dedent text when pasting. 
+            dedent_on_paste: true,
+
+            // If true, lines pushed onto buffer have leading tabs 
+            // converted to spaces.
+            tab_to_space: true,
+
+            // How many spaces to use when converting tabs.
+            // Also the number of spaces for auto-indentation when starting
+            // a new line in the terminal.
+            tab_size: 4,
+
+            // True to push python stdout/stedrr to console.log
+            // This has the benefit of being able to see python's output
+            // as it's printed, rather than only seeing it displayed in the
+            // terminal after the python code has been executed.
+            print_to_js_console: true,
+            
+            // Max number of terminal lines.
+            // Changing this after the terminal has been created has no effect.
+            output_lines: 10000,
+
+            // True to display info about pyodide and jquery terminal.
+            display_greeting: true,
+
+            // True no display a note when terminal starts about browser 
+            // compatibility.
+            display_browser_version_note: true,
+
+            // True to display "loading python" and "python loaded" in terminal.
+            display_loading_python: true,
+        }
+```
+
 ### `pyWeb.loadPackage(packageName)`
 
 A light wrapper around pyodide.loadPackage which locks the terminal
