@@ -96,6 +96,18 @@ var pyWeb = {
 
         Returns:
             object: As described in the python _exec() function.
+
+        Example:
+            pyWeb.runCode('print(1)', {display_input: false})
+            
+            let exec_res = pyWeb.runCode(String.raw`
+                    a = 1
+                    print(a)
+                `,
+                {display_input: false}
+            )
+            console.log(exec_res.output)
+
         */
        let default_options = {
            // True to dedent code before running and displaying it.
@@ -290,6 +302,9 @@ var pyWeb = {
         
         Returns:
             Promise: Resolved once pyWeb is ready to use.
+        
+        Example:
+            pyWeb.new('#terminal', {print_to_js_console: false})
         */
         
         let default_options = {

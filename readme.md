@@ -2,11 +2,30 @@
 
 ## Summary
 
-pyWeb makes pyodide in the browser more accessible.
+pyWeb makes pyodide in the browser more accessible for developers and command line based web programs.
 
-## Examples
+[pyodide](https://github.com/iodide-project/pyodide) is the CPython scientific stack, compiled to WebAssembly - yes, CPython, numpy, pandas, etc. in the browser.
 
-https://jurasofish.github.io/pyweb/
+Check out the [Main demo](https://jurasofish.github.io/pyweb/), and see the other demos below.
+
+### Demos
+
+ - [Overview](https://jurasofish.github.io/pyweb/)
+ - [Loading packages (numpy, pandas)](todo)
+ - [Using matplotlib and plotly](todo)
+ - [Hiding and displaying the terminal](todo)
+ - [Minimal usage](todo)
+
+## Guide
+
+A minimal example 
+
+## Tests
+
+[Run the tests yourself here.](https://jurasofish.github.io/pyweb/tests/pyWebTestRunner.html)
+
+Opening the test page will load pyodide and run the tests locally in your
+web browser using [Jasmine](https://jasmine.github.io/).
 
 ## JavaScript API
 
@@ -32,6 +51,10 @@ the terminal, while leaving the python runtime untouched.
         
         Returns:
             Promise: Resolved once pyWeb is ready to use.
+        
+        Example:
+            pyWeb.new('#terminal', {print_to_js_console: false})
+
 
 The default options are 
 
@@ -116,7 +139,18 @@ Args:
         descriptions.
 
 Returns:
-    object: As described in the python _exec() function.
+    object: As described below.
+
+Example:
+    pyWeb.runCode('print(1)')
+    
+    let exec_res = pyWeb.runCode(String.raw`
+            a = 1
+            print(a)
+        `,
+        {display_input: false}
+    )
+    console.log(exec_res.output)
 
 The default options are 
 
@@ -137,6 +171,34 @@ let default_options = {
     // they had been typed in manually.
     push_to_history: true
 }
+
+The returned object has the following form:
+
+{
+    # The code that was executed.
+    'code': code_str,
+
+    # A string of what the code caused to be
+    # displayed on stdout and stderr.
+    'output': _out.get_output(),
+
+    # If the executed code returns a value, this will be that 
+    # value. It will follow the type conversion used by pyodide.
+    # Will be None for no result.
+    'result': res,
+
+    # A string representation of result.
+    'result_repr': repr(res),
+
+    # If the code raised an exception, then this will be the
+    # exception object.
+    # Will be None for no exception.
+    'exception': exc,
+
+    # A string representation of the exception object.
+    # Will be an empty string for no exception.
+    'exception_string': exc_string,
+}
 ```
 
 ### `pyWeb.clear()`
@@ -148,16 +210,18 @@ Clear the terminal and any partially entered commands.
 pyWeb creates the following global variables in python
 
  - `pyWeb`: a reference to the JavaScript global `pyWeb` object.
- - `pyodide`: The pyodide python package
- - `pyodidejs`: A reference to the JavaScript global `pyodide` object.
- - `js`: The special pyodide `js` package.
- - `console`: A reference to the JavaScript console, so you can `console.log(x)` from python
+ - `pyodide`: The **Python** pyodide package. See the pyodide documentation.
+ - `pyodidejs`: A reference to the **JavaScript** `pyodide` object.
+                See the pyodide documentation.
+ - `js`: The special pyodide `js` package. See the pyodide documentation.
+ - `console`: A reference to the JavaScript console, so you can use
+              `console.log(x)` from python
  - `busy_sleep`: A sleep function.
 
-### `pyWeb.loadPackage(packageName), pyWeb.clear()`
+### `pyWeb.loadPackage(packageName); pyWeb.clear()`
 
-Same as the javascript version, since these are merely references to them.
+Same as the Javascript versions, since these are merely references to them.
 
 ### `busy_sleep(dt, clock_src=time.monotonic)`
 
-sleep for dt seconds while consuming max cpu.
+Busy sleep for dt seconds (while consuming cpu).
