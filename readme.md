@@ -37,60 +37,60 @@ Initialize pyWeb/pyodide and attach terminal to the specified div.
 Calling this more than once is not well tested, but should reset
 the terminal, while leaving the python runtime untouched.
 
-        Args:
-            div (str): Element to attach the terminal to.
-                This is passed directly to the jQuery terminal
-                instantiator, so see those docs.
-                For a specific div, use e.g '#terminal', in which case you
-                would need <div id="terminal"></div> in HTML.
-                For fullscreen, use 'body' (might not end up fullscreen 
-                if you have lots of styling).
-            options (object): map from option name to option value to override
-                the default options.
-                See the default options in the function body for descriptions.
-        
-        Returns:
-            Promise: Resolved once pyWeb is ready to use.
-        
-        Example:
-            pyWeb.new('#terminal', {print_to_js_console: false})
+Args:
+    div (str): Element to attach the terminal to.
+        This is passed directly to the jQuery terminal
+        instantiator, so see those docs.
+        For a specific div, use e.g '#terminal', in which case you
+        would need <div id="terminal"></div> in HTML.
+        For fullscreen, use 'body' (might not end up fullscreen 
+        if you have lots of styling).
+    options (object): map from option name to option value to override
+        the default options.
+        See the default options in the function body for descriptions.
+
+Returns:
+    Promise: Resolved once pyWeb is ready to use.
+
+Example:
+    pyWeb.new('#terminal', {print_to_js_console: false})
 
 
 The default options are 
 
-        let default_options = {
-            // If true, dedent text when pasting. 
-            dedent_on_paste: true,
+let default_options = {
+    // If true, dedent text when pasting. 
+    dedent_on_paste: true,
 
-            // If true, lines typed at the console have tabs converted to spaces.
-            tab_to_space: true,
+    // If true, lines typed at the console have tabs converted to spaces.
+    tab_to_space: true,
 
-            // How many spaces to use when converting tabs.
-            // Also the number of spaces for auto-indentation when starting
-            // a new line in the terminal.
-            tab_size: 4,
+    // How many spaces to use when converting tabs.
+    // Also the number of spaces for auto-indentation when starting
+    // a new line in the terminal.
+    tab_size: 4,
 
-            // True to push python stdout/stedrr to console.log
-            // This has the benefit of being able to see python's output
-            // as it's printed, rather than only seeing it displayed in the
-            // terminal after the python code has been executed.
-            print_to_js_console: true,
-            
-            // Max number of terminal lines.
-            // Changing this after the terminal has been created has no effect.
-            output_lines: 10000,
+    // True to push python stdout/stedrr to console.log
+    // This has the benefit of being able to see python's output
+    // as it's printed, rather than only seeing it displayed in the
+    // terminal after the python code has been executed.
+    print_to_js_console: true,
+    
+    // Max number of terminal lines.
+    // Changing this after the terminal has been created has no effect.
+    output_lines: 10000,
 
-            // True to display info about pyodide and jquery terminal when
-            // the terminal is created.
-            display_greeting: true,
+    // True to display info about pyodide and jquery terminal when
+    // the terminal is created.
+    display_greeting: true,
 
-            // True to display a note when terminal starts about browser 
-            // compatibility.
-            display_browser_version_note: true,
+    // True to display a note when terminal starts about browser 
+    // compatibility.
+    display_browser_version_note: true,
 
-            // True to display "loading python" and "python loaded" in terminal.
-            display_loading_python: true,
-        }
+    // True to display "loading python" and "python loaded" in terminal.
+    display_loading_python: true,
+}
 ```
 
 ### `pyWeb.loadPackage(packageName)`
