@@ -1,4 +1,4 @@
-# pyWeb
+# pyWeb - CPython, Numpy & co. in the browser 
 
 Check out the [Main demo.](https://jurasofish.github.io/pyweb/)
 
@@ -6,7 +6,7 @@ pyWeb makes pyodide in the browser more accessible for developers, and allows th
 
 [pyodide](https://github.com/iodide-project/pyodide) is the CPython scientific stack, compiled to WebAssembly - yes, CPython with numpy, pandas, etc. in the browser 100% client-side.
 
-### Demos
+### Live Demos
 
  - [Overview](https://jurasofish.github.io/pyweb/)
  - [Loading packages (numpy, pandas, etc.)](todo)
@@ -18,7 +18,7 @@ pyWeb makes pyodide in the browser more accessible for developers, and allows th
 
 ### Getting Started
 
-The master branch of this repository contains the lastest version of pyWeb.js.
+The master branch of this repository contains the latest version of pyWeb.js.
 
 To use pyWeb load the prerequisite JavaScript libraries and call `pyWeb.new()`.
 
@@ -53,10 +53,15 @@ Or, to attach to an existing div specify it's name.
 </body>
 ```
 
+In these examples - and the examples in this repository - pyodide has been loaded from the iodide CDN. pyodide is very large so you may wish to set up a more controlled CDN to ensure your site does not have performance issues.
+
 ### Running code
 
 You can type code in the terminal and run it, of course.
-The terminal is intended to vaguely mirror the PyCharm python console behaviour. It supports multi-line input if it detects an incomplete first line or if you use `shift+enter`. History accesible with arrow keys. The terminal itself is based on [jQuery Terminal Emulator](https://github.com/jcubic/jquery.terminal)
+The terminal is intended to vaguely mirror the PyCharm python console behaviour. 
+It supports multi-line input if it detects an incomplete first line or if you use `shift+enter`. 
+History is accesible with arrow keys. 
+The terminal itself uses [jQuery Terminal Emulator](https://github.com/jcubic/jquery.terminal).
 
 From JavaScript, use the `pyWeb.runCode()` function to execute code in the terminal.
 Using the `options` argument you can control whether thd code itself and the output of the code are displayed in the terminal.
@@ -76,19 +81,24 @@ let exec_res = pyWeb.runCode(String.raw`
     {display_input: false}
 )
 console.log(exec_res.output)
+// exec_res contains other useful info - see the API reference.
 ```
 
 You can also use the pyodide functions to run code, which do not interact with the pyWeb terminal. e.g. `pyodide.runPython()` (see the pyodide docs).
 
 ### Loading packages
 
-pyoodide requires that packages be compiled before importing.
-Luckily the pyodide project has already done this for a heap of packages: [This will give you an idea of what's available.](https://github.com/iodide-project/pyodide/tree/master/packages)
+To import a package in pyWeb/pyodide you first have to load its files into the virtual filesystem (unless it's part of the python standard library, which are already loaded). These files must already be compiled for pyodide - luckily the pyodide project has already done this for a heap of packages: [This will give you an idea of what's available.](https://github.com/iodide-project/pyodide/tree/master/packages)
 
-pyWeb provides the function `pyWeb.loadPackage(packageName)` to load a pre-built package. It's a very light wrapper around `pyodide.loadPackage`.
+To load package files, pyWeb provides the function `pyWeb.loadPackage(packageName)` which is a very light wrapper around `pyodide.loadPackage`. 
+
+This will load the files from the location specified when pyodide was compiled. For example, if you loaded pyodide from the iodide CDN then it's probably configured to load packages from the same location. You can use the browser's developer tools to see where it's loading packages from. Packages can be large - loading pandas and its prerequisites takes some 20MB of downloads. The CDN from which this is downloaded will have an effect on the loading time.
+
+You should also be able to use a URL instead of a package name to load a package from a custom location.
 
 ```python
 >>> # Load the numpy package files.
+>>> # This will load from wherever pyodide was told at compile time.
 >>> pyWeb.loadPackage('numpy')
 >>> # Now that the files are loaded, we can import it
 >>> import numpy as np
@@ -107,6 +117,28 @@ e.g. (copying the example from pyodide)
 >>> stemmer = snowballstemmer.stemmer('english')
 >>> stemmer.stemWords('go goes going gone'.split())
 ['go', 'goe', 'go', 'gone']
+```
+
+You can also load packages from JavaScript and make use of the returned promises to make sure files are loaded before running the next piece of code:
+
+```javascript
+pyWeb.new().then( () => {
+    console.log('pyWeb loaded')
+    pyWeb.loadPackage('numpy').then( () => {
+        console.log('numpy loaded');
+        pyWeb.runPython('import numpy as np')
+    })
+})
+```
+
+To load a package without displaying anything in the pyWeb terminal you can just use the plain `pyodide.loadPackage()`:
+
+```javascript
+pyWeb.new().then( () => {
+    pyodide.loadPackage('numpy').then( () => {
+        console.log('numpy loaded silently');
+    })
+})
 ```
 
 ## Tests
