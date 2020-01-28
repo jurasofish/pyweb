@@ -14,7 +14,7 @@ Check out the [Main demo](https://jurasofish.github.io/pyweb/), and see the othe
  - [Loading packages (numpy, pandas)](todo)
  - [Using matplotlib and plotly](todo)
  - [Hiding and displaying the terminal](todo)
- - [Minimal usage](todo)
+ - [Minimal usage](https://jurasofish.github.io/pyweb/demos/minimal.html)
 
 ## Guide
 
