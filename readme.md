@@ -1,24 +1,113 @@
 # pyWeb
 
-## Summary
+Check out the [Main demo.](https://jurasofish.github.io/pyweb/)
 
-pyWeb makes pyodide in the browser more accessible for developers and command line based web programs.
+pyWeb makes pyodide in the browser more accessible for developers, and allows the creation of command line-based python web programs.
 
-[pyodide](https://github.com/iodide-project/pyodide) is the CPython scientific stack, compiled to WebAssembly - yes, CPython, numpy, pandas, etc. in the browser.
-
-Check out the [Main demo](https://jurasofish.github.io/pyweb/), and see the other demos below.
+[pyodide](https://github.com/iodide-project/pyodide) is the CPython scientific stack, compiled to WebAssembly - yes, CPython with numpy, pandas, etc. in the browser 100% client-side.
 
 ### Demos
 
  - [Overview](https://jurasofish.github.io/pyweb/)
- - [Loading packages (numpy, pandas)](todo)
+ - [Loading packages (numpy, pandas, etc.)](todo)
  - [Using matplotlib and plotly](todo)
  - [Hiding and displaying the terminal](todo)
  - [Minimal usage](https://jurasofish.github.io/pyweb/demos/minimal.html)
 
 ## Guide
 
-A minimal example 
+### Getting Started
+
+The master branch of this repository contains the lastest version of pyWeb.js.
+
+To use pyWeb load the prerequisite JavaScript libraries and call `pyWeb.new()`.
+
+```html
+<!-- Minial example - full screen pyWeb terminal. -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="https://code.jquery.com/jquery-latest.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.terminal/js/jquery.terminal.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/>
+    <script src="https://pyodide.cdn.iodide.io/pyodide.js"></script>
+    <script src="../pyWeb.js"></script>
+    </head>
+  <body>
+    <script>
+        pyWeb.new()
+    </script>
+  </body>
+</html>
+```
+
+Or, to attach to an existing div specify it's name.
+
+```html
+<body>
+    <div id="myPyWebTerminal"></div>
+    <script>
+        pyWeb.new('#myPyWebTerminal')
+    </script>
+</body>
+```
+
+### Running code
+
+You can type code in the terminal and run it, of course.
+The terminal is intended to vaguely mirror the PyCharm python console behaviour. It supports multi-line input if it detects an incomplete first line or if you use `shift+enter`. History accesible with arrow keys. The terminal itself is based on [jQuery Terminal Emulator](https://github.com/jcubic/jquery.terminal)
+
+From JavaScript, use the `pyWeb.runCode()` function to execute code in the terminal.
+Using the `options` argument you can control whether thd code itself and the output of the code are displayed in the terminal.
+The returned object gives you access to the output produced by the executed code.
+See the [Main demo](https://jurasofish.github.io/pyweb/) where this is bound
+to a button.
+
+```javascript
+// JavaScript
+
+pyWeb.runCode('print(1)')
+    
+let exec_res = pyWeb.runCode(String.raw`
+        a = 1
+        print(a)
+    `,
+    {display_input: false}
+)
+console.log(exec_res.output)
+```
+
+You can also use the pyodide functions to run code, which do not interact with the pyWeb terminal. e.g. `pyodide.runPython()` (see the pyodide docs).
+
+### Loading packages
+
+pyoodide requires that packages be compiled before importing.
+Luckily the pyodide project has already done this for a heap of packages: [This will give you an idea of what's available.](https://github.com/iodide-project/pyodide/tree/master/packages)
+
+pyWeb provides the function `pyWeb.loadPackage(packageName)` to load a pre-built package. It's a very light wrapper around `pyodide.loadPackage`.
+
+```python
+>>> # Load the numpy package files.
+>>> pyWeb.loadPackage('numpy')
+>>> # Now that the files are loaded, we can import it
+>>> import numpy as np
+```
+
+For installing pure Python packages from PyPI, pyodide's `micropip` package works - see the pyodide docs.
+Note that `micropip.install` is aynchronous so you'll have to guess when it's finished. (Could make this block the terminal like `pyWeb.loadPackage` - TODO).
+
+e.g. (copying the example from pyodide)
+
+```python
+>>> pyWeb.loadPackage('micropip')
+>>> import micropip
+>>> micropip.install('snowballstemmer')  # async
+>>> import snowballstemmer
+>>> stemmer = snowballstemmer.stemmer('english')
+>>> stemmer.stemWords('go goes going gone'.split())
+['go', 'goe', 'go', 'gone']
+```
 
 ## Tests
 
