@@ -1,4 +1,4 @@
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 25000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 let termdivCounter = 0;
 
 
