@@ -2,6 +2,8 @@
 
 Check out the [Main demo.](https://jurasofish.github.io/pyweb/)
 
+[![Foo](pyweb.png)](https://jurasofish.github.io/pyweb/)
+
 pyWeb makes pyodide in the browser more accessible for developers, and allows the creation of command line-based python web programs.
 
 [pyodide](https://github.com/iodide-project/pyodide) is the CPython scientific stack, compiled to WebAssembly - yes, CPython with numpy, pandas, etc. in the browser 100% client-side.
@@ -169,6 +171,17 @@ e.g. (copying the example from pyodide)
 
 Opening the test page will load pyodide and run the tests locally in your
 web browser using [Jasmine](https://jasmine.github.io/).
+
+## Jank
+
+There are plenty of things that aren't so pleasant in pyWeb.
+
+ - Updating the text displayed in the console requires JavaScript to yield to the browser event loop.
+ This isn't (trivially) possible from within python.
+ As a result, Python's stdout and stderr will only be displayed once the running Python code finished and hands control back to the browser.
+ pyWeb has an option to also push stdout and stderr to the JavaScript console.
+
+ - The pyodide CDN used in the demos on this repository is unversioned, and pyWeb doesn't check the pyodide version yet.
 
 ## JavaScript API
 
