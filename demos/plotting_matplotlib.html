@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.terminal@2.12.0/js/jquery.terminal.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/jquery.terminal@2.12.0/css/jquery.terminal.min.css" rel="stylesheet"/>
+    <script src="https://pyodide.cdn.iodide.io/pyodide.js"></script>
+    <script src="../pyWeb.js"></script>
+
+    <style>
+        body, html {
+            height: 100%;
+            font: 1rem 'Fira Sans', sans-serif;
+        }
+        body {
+            margin:0;
+            display:flex;
+            flex-wrap:wrap;
+        }
+        #terminal {
+            width:50%;
+            min-height:100%;
+            max-height:100%;
+        }
+        #right {
+            width:50%;
+            min-height:100%;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+        </style>
+  </head>
+  <body>
+    <div id="terminal"></div>
+    <div id = "right">
+        <div style="padding:10px">
+            Python code will automatically run and display a plot here.
+        </div>
+    </div>
+    <script>
+        pyWeb.new('#terminal').then( () => {
+            pyWeb.runCode("pyWeb.loadPackage(['numpy', 'matplotlib'])").result.then( () => {
+                pyWeb.runCode(String.raw`
+                import io
+                import base64
+                import numpy as np
+                from matplotlib import pyplot as plt
+
+                x = np.linspace(0, 2.0 * np.pi, 100)
+                y = np.sin(x)
+
+                p = plt.figure()
+                plt.plot(x, y)
+
+                buf = io.BytesIO()
+                plt.savefig(buf, format='png')
+                buf.seek(0)
+                image_b64 = base64.b64encode(buf.read()).decode()
+
+                img = js.document.createElement('img');
+                img.src = "data:image/png;base64, " + image_b64;
+                js.document.getElementById('right').appendChild(img);
+                
+                img.setAttribute('width', int(img.parentElement.offsetWidth*0.9))
+                `)
+            })
+        })
+    </script>
+  </body>
+</html>

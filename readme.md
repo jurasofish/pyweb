@@ -10,8 +10,7 @@ pyWeb makes pyodide in the browser more accessible for developers, and allows th
 
  - [Overview](https://jurasofish.github.io/pyweb/)
  - [Loading packages (numpy, pandas, etc.)](todo)
- - [Using matplotlib and plotly](todo)
- - [Hiding and displaying the terminal](todo)
+ - [Using matplotlib](https://jurasofish.github.io/pyweb/demos/minimal/plotting_matplotlib.html)
  - [Minimal usage](https://jurasofish.github.io/pyweb/demos/minimal.html)
 
 ## Guide
@@ -69,10 +68,12 @@ See the [Main demo](https://jurasofish.github.io/pyweb/) where this is bound
 to a button.
 
 ```javascript
-// JavaScript
+// Run code in pyWeb terminal from JavaScript.
 
+// Simple:
 pyWeb.runCode('print(1)')
     
+// More complex
 let exec_res = pyWeb.runCode(String.raw`
         a = 1
         print(a)
@@ -89,41 +90,47 @@ You can also use the pyodide functions to run code, which do not interact with t
 
 To import a package in pyWeb/pyodide you first have to load its files into the virtual filesystem (unless it's part of the python standard library, which are already loaded). These files must already be compiled for pyodide - luckily the pyodide project has already done this for a heap of packages: [This will give you an idea of what's available.](https://github.com/iodide-project/pyodide/tree/master/packages)
 
-To load package files, pyWeb provides the function `pyWeb.loadPackage(packageName)` which is a very light wrapper around `pyodide.loadPackage`. 
+To load package files, pyWeb provides the function `pyWeb.loadPackage(packageName)` which is a very light wrapper around `pyodide.loadPackage()`. 
 
 This will load the files from the location specified when pyodide was compiled. For example, if you loaded pyodide from the iodide CDN then it's probably configured to load packages from the same location. You can use the browser's developer tools to see where it's loading packages from. Packages can be large - loading pandas and its prerequisites takes some 20MB of downloads. The CDN from which this is downloaded will have an effect on the loading time.
-
-You should also be able to use a URL instead of a package name to load a package from a custom location.
 
 ```python
 >>> # Load the numpy package files.
 >>> # This will load from wherever pyodide was told at compile time.
 >>> pyWeb.loadPackage('numpy')
->>> # Now that the files are loaded, we can import it
+>>> # The console will not allow any more input until the numpy files are loaded.
+>>> # Now that the files are loaded, we can import numpy.
 >>> import numpy as np
 ```
 
-For installing pure Python packages from PyPI, pyodide's `micropip` package works - see the pyodide docs.
-Note that `micropip.install` is aynchronous so you'll have to guess when it's finished. (Could make this block the terminal like `pyWeb.loadPackage` - TODO).
-
-e.g. (copying the example from pyodide)
+Because the `loadPackage` function is asynchronous (non-blocking), it will allow python code following it to be executed immediately, even though the package files haven't loaded yet. Always use the `loadPackage` function on its own input line.
 
 ```python
->>> pyWeb.loadPackage('micropip')
->>> import micropip
->>> micropip.install('snowballstemmer')  # async
->>> import snowballstemmer
->>> stemmer = snowballstemmer.stemmer('english')
->>> stemmer.stemWords('go goes going gone'.split())
-['go', 'goe', 'go', 'gone']
+>>> # This will fail because the commands are executed together.
+>>> pyWeb.loadPackage('numpy')
+... import numpy as np
+Traceback (most recent call last):
+  File "<exec>", line 162, in _exec_buffer
+  File "/lib/python3.7/site-packages/pyodide.py", line 43,
+ in eval_code
+    exec(compile(mod, '<exec>', mode='exec'), ns, ns)
+  File "<exec>", line 2, in <module>
+ModuleNotFoundError: No module named 'numpy'
+>>> # Wait a few seconds for the files to finish loading in the background and it will probably work.
+>>> import numpy as np
 ```
 
-You can also load packages from JavaScript and make use of the returned promises to make sure files are loaded before running the next piece of code:
+You can also load packages from JavaScript and make use of the returned promise to make sure files are loaded before running the next piece of code:
 
 ```javascript
+
+// Load a package from JavaScript.
+// Note here that the pyodide.loadPackage promise is passed through
+// from JavaScript to Python, and finally to Javascript where we use it.
+
 pyWeb.new().then( () => {
     console.log('pyWeb loaded')
-    pyWeb.loadPackage('numpy').then( () => {
+    pyWeb.runCode("pyWeb.loadPackage('numpy')").result.then( () => {
         console.log('numpy loaded');
         pyWeb.runPython('import numpy as np')
     })
@@ -138,6 +145,22 @@ pyWeb.new().then( () => {
         console.log('numpy loaded silently');
     })
 })
+```
+
+For installing pure Python packages from PyPI, pyodide's `micropip` package works - see the pyodide docs.
+This is very experimental.
+Note that `micropip.install` is aynchronous so you'll have to guess when it's finished. (Could make this block the terminal like `pyWeb.loadPackage` - TODO).
+
+e.g. (copying the example from pyodide)
+
+```python
+>>> pyWeb.loadPackage('micropip')
+>>> import micropip
+>>> micropip.install('snowballstemmer')  # async
+>>> import snowballstemmer
+>>> stemmer = snowballstemmer.stemmer('english')
+>>> stemmer.stemWords('go goes going gone'.split())
+['go', 'goe', 'go', 'gone']
 ```
 
 ## Tests
@@ -237,7 +260,9 @@ to the console, so the console is redirected to python for the duration
 of the loading operation.
 
 Args:
-    packageName (str): name of package to load (e.g. "numpy")
+    packageName (str, list of str): Name or list of names of 
+        packages to load (e.g. "numpy", or ['numpy', 'pandas']).
+        Should also be able to provide URLs.
 
 Returns:
     Promise: resolved after package files are loaded.

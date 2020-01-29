@@ -54,7 +54,9 @@ var pyWeb = {
         of the loading operation.
 
         Args:
-            packageName (str): name of package to load (e.g. "numpy")
+            packageName (str, list of str): Name or list of names of 
+                packages to load (e.g. "numpy", or ['numpy', 'pandas']).
+                Should also be able to provide URLs.
 
         Returns:
             Promise: resolved after package files are loaded.
