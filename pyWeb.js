@@ -667,7 +667,7 @@ var pyWeb = {
                 }
                 pyWeb.runCode(
                     `print('Python %s on %s' % (sys.version, sys.platform), end='')`,
-                    false
+                    {display_input: false}
                 )
                 pyWeb.LOCK_TERMINAL = false;
             }, 
