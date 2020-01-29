@@ -4,7 +4,7 @@ Check out the [Main demo.](https://jurasofish.github.io/pyweb/)
 
 [![Foo](pyweb.png)](https://jurasofish.github.io/pyweb/)
 
-pyWeb provides a terminal front-end for [Pyodide](https://github.com/iodide-project/pyodide), making it more accessible for developers, and easing the creation of command line-based python web programs.
+pyWeb provides a terminal front-end for [Pyodide](https://github.com/iodide-project/pyodide), making it more accessible for developers and easing the creation of command line-based python web programs.
 [Pyodide](https://github.com/iodide-project/pyodide) is the CPython scientific stack, compiled to WebAssembly - yes, CPython with numpy, pandas, etc. in the browser 100% client-side.
 
 ### Live Demos
@@ -362,6 +362,14 @@ The returned object has the following form:
     'exception_string': exc_string,
 }
 ```
+
+### `pyWeb.version()`
+
+```
+Returns the version of pyWeb as a string.
+pyWeb uses semantic versioning.
+```
+
 
 ### `pyWeb.clear()`
 

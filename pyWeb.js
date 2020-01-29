@@ -32,6 +32,8 @@ var pyWeb = {
 
     __delay__: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
 
+    version: () => '0.0.1',
+
     loadPackage: (packageName) => {
         /* Lock the console while loading a package into the virtual filesystem.
         
