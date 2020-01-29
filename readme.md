@@ -4,9 +4,8 @@ Check out the [Main demo.](https://jurasofish.github.io/pyweb/)
 
 [![Foo](pyweb.png)](https://jurasofish.github.io/pyweb/)
 
-pyWeb makes pyodide in the browser more accessible for developers, and allows the creation of command line-based python web programs.
-
-[pyodide](https://github.com/iodide-project/pyodide) is the CPython scientific stack, compiled to WebAssembly - yes, CPython with numpy, pandas, etc. in the browser 100% client-side.
+pyWeb provides a terminal front-end for [Pyodide](https://github.com/iodide-project/pyodide), making it more accessible for developers, and easing the creation of command line-based python web programs.
+[Pyodide](https://github.com/iodide-project/pyodide) is the CPython scientific stack, compiled to WebAssembly - yes, CPython with numpy, pandas, etc. in the browser 100% client-side.
 
 ### Live Demos
 
@@ -53,7 +52,7 @@ Or, to attach to an existing div specify it's name.
 </body>
 ```
 
-In these examples - and the examples in this repository - pyodide has been loaded from the iodide CDN. pyodide is very large so you may wish to set up a more controlled CDN to ensure your site does not have performance issues.
+In these examples - and the examples in this repository - Pyodide has been loaded from the iodide CDN. Pyodide is very large so you may wish to set up a more controlled CDN to ensure your site does not have performance issues.
 
 ### Running code
 
@@ -86,19 +85,19 @@ console.log(exec_res.output)
 // exec_res contains other useful info - see the API reference.
 ```
 
-You can also use the pyodide functions to run code, which do not interact with the pyWeb terminal. e.g. `pyodide.runPython()` (see the pyodide docs).
+You can also use the Pyodide functions to run code, which do not interact with the pyWeb terminal. e.g. `pyodide.runPython()` (see the Pyodide docs).
 
 ### Loading packages
 
-To import a package in pyWeb/pyodide you first have to load its files into the virtual filesystem (unless it's part of the python standard library, which are already loaded). These files must already be compiled for pyodide - luckily the pyodide project has already done this for a heap of packages: [This will give you an idea of what's available.](https://github.com/iodide-project/pyodide/tree/master/packages)
+To import a package in pyWeb/Pyodide you first have to load its files into the virtual filesystem (unless it's part of the python standard library, which are already loaded). These files must already be compiled for Pyodide - luckily the Pyodide project has already done this for a heap of packages: [This will give you an idea of what's available.](https://github.com/iodide-project/pyodide/tree/master/packages)
 
 To load package files, pyWeb provides the function `pyWeb.loadPackage(packageName)` which is a very light wrapper around `pyodide.loadPackage()`. 
 
-This will load the files from the location specified when pyodide was compiled. For example, if you loaded pyodide from the iodide CDN then it's probably configured to load packages from the same location. You can use the browser's developer tools to see where it's loading packages from. Packages can be large - loading pandas and its prerequisites takes some 20MB of downloads. The CDN from which this is downloaded will have an effect on the loading time.
+This will load the files from the location specified when Pyodide was compiled. For example, if you loaded Pyodide from the iodide CDN then it's probably configured to load packages from the same location. You can use the browser's developer tools to see where it's loading packages from. Packages can be large - loading pandas and its prerequisites takes some 20MB of downloads. The CDN from which this is downloaded will have an effect on the loading time.
 
 ```python
 >>> # Load the numpy package files.
->>> # This will load from wherever pyodide was told at compile time.
+>>> # This will load from wherever Pyodide was told at compile time.
 >>> pyWeb.loadPackage('numpy')
 >>> # The console will not allow any more input until the numpy files are loaded.
 >>> # Now that the files are loaded, we can import numpy.
@@ -127,7 +126,7 @@ You can also load packages from JavaScript and make use of the returned promise 
 ```javascript
 
 // Load a package from JavaScript.
-// Note here that the pyodide.loadPackage promise is passed through
+// Note here that the Pyodide.loadPackage promise is passed through
 // from JavaScript to Python, and finally to Javascript where we use it.
 
 pyWeb.new().then( () => {
@@ -149,11 +148,11 @@ pyWeb.new().then( () => {
 })
 ```
 
-For installing pure Python packages from PyPI, pyodide's `micropip` package works - see the pyodide docs.
+For installing pure Python packages from PyPI, Pyodide's `micropip` package works - see the Pyodide docs.
 This is very experimental.
 Note that `micropip.install` is aynchronous so you'll have to guess when it's finished. (Could make this block the terminal like `pyWeb.loadPackage` - TODO).
 
-e.g. (copying the example from pyodide)
+e.g. (copying the example from Pyodide)
 
 ```python
 >>> pyWeb.loadPackage('micropip')
@@ -169,19 +168,24 @@ e.g. (copying the example from pyodide)
 
 [Run the tests yourself here.](https://jurasofish.github.io/pyweb/tests/pyWebTestRunner.html)
 
-Opening the test page will load pyodide and run the tests locally in your
+Opening the test page will load Pyodide and run the tests locally in your
 web browser using [Jasmine](https://jasmine.github.io/).
 
 ## Jank
 
 There are plenty of things that aren't so pleasant in pyWeb.
 
- - Updating the text displayed in the console requires JavaScript to yield to the browser event loop.
+ - Updating the text rendered in the terminal requires JavaScript to yield to the browser event loop.
  This isn't (trivially) possible from within python.
- As a result, Python's stdout and stderr will only be displayed once the running Python code finished and hands control back to the browser.
- pyWeb has an option to also push stdout and stderr to the JavaScript console.
+ As a result, Python's stdout and stderr will only be displayed once the running Python code finishes and hands control back to the browser.
+ pyWeb has an option to also push stdout and stderr to the JavaScript console, which occurs in real time.
 
- - The pyodide CDN used in the demos on this repository is unversioned, and pyWeb doesn't check the pyodide version yet.
+ - Similarly, there is no proper sleep function available yet.
+   pyWeb includes a busy sleep function.
+
+ - Working with files from your local filesystem is not yet easy.
+
+ - The Pyodide CDN used in the demos on this repository is unversioned, and pyWeb doesn't check the Pyodide version yet.
 
 ## JavaScript API
 
@@ -189,7 +193,7 @@ pyWeb creates a single `pyWeb` global in javascript, along with the `pyodide` gl
 
 ### `pyWeb.new(div, [options])`
 ```
-Initialize pyWeb/pyodide and attach terminal to the specified div.
+Initialize pyWeb/Pyodide and attach terminal to the specified div.
 Calling this more than once is not well tested, but should reset
 the terminal, while leaving the python runtime untouched.
 
