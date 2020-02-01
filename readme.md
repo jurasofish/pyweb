@@ -250,6 +250,15 @@ let default_options = {
 
     // True to display "loading python" and "python loaded" in terminal.
     display_loading_python: true,
+
+    // Whether to display a console and/or terminal error (that is,
+    // red text) message when input is provided while the console
+    // is locked. Note that The console is usually locked because of
+    // package loading, so REDIRECTCONSOLE is
+    // probably on, so printing a console message will probably also
+    // display a message in the terminal.
+    display_locked_console_log: false,
+    display_locked_terminal_error: true,
 }
 ```
 
@@ -395,3 +404,11 @@ Same as the Javascript versions, since these are merely references to them.
 ### `busy_sleep(dt, clock_src=time.monotonic)`
 
 Busy sleep for dt seconds (while consuming cpu).
+
+## Changelog
+
+### 0.0.2
+ - Change behaviour of terminal locking to fix pasting.
+
+### 0.0.1
+ - initial

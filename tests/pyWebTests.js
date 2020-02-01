@@ -99,6 +99,66 @@ describe('pyWeb can', ()=>{
 
     })
 
+
+
+    it('paste and execute text with multiple levels of indent and half open strings, '
+     + 'with no text in the terminal beforehand', async ()=>{
+
+        let dedent_on_paste_backup = pyWeb.options.dedent_on_paste;
+        pyWeb.options.dedent_on_paste = true;
+
+        // Fake paste event object.
+        let e = {originalEvent: {clipboardData: {getData: () => {
+            return String.raw`
+            a = 1
+            def modify_with_transformer(ybus, transformer):
+                """ Add transformer data to the admittance matrix.
+            
+                Args:
+                    ybus (numpy.ndarray): Admittance matrix.
+                    transformer (pandas df): Dataframe of transformer data.
+            
+                Returns:
+                    numpy.ndarray: Modified admittance matrix.
+                """
+                for tran_row in transformer.itertuples():
+                    i = tran_row.bus_1  # Bus without tap.
+                    j = tran_row.bus_2  # Bus with tap.
+            
+            `
+        }}}}
+
+        pyWeb._paste(e);
+        await __delay__(10);  // let console figure it's life out.
+        pyWeb.term.exec(''); 
+        expected = String.raw`
+        >>> 
+        ... a = 1
+        ... def modify_with_transformer(ybus, transformer):
+        ...     """ Add transformer data to the admittance matrix.
+        ... 
+        ...     Args:
+        ...         ybus (numpy.ndarray): Admittance matrix.
+        ...         transformer (pandas df): Dataframe of transformer data.
+        ... 
+        ...     Returns:
+        ...         numpy.ndarray: Modified admittance matrix.
+        ...     """
+        ...     for tran_row in transformer.itertuples():
+        ...         i = tran_row.bus_1  # Bus without tap.
+        ...         j = tran_row.bus_2  # Bus with tap.
+        ... 
+        ... `;
+        // mmmm probably should keep this inside javascript but whatever
+        expected = pyodide.globals.textwrap.dedent(expected);
+        expected = expected = expected.substring(1); // remove first newline.
+
+        expect(pyWeb.term.get_output()).toBe(expected);
+        expect(pyWeb.term.get_command()).toBe('');
+
+        pyWeb.options.dedent_on_paste = dedent_on_paste_backup;
+    })
+
     it('prompt for new line on colon at end of line', ()=>{
         pyWeb.term.exec('literally anything with a colon at the end:')
         expect(pyWeb.term.get_output()).toBe(

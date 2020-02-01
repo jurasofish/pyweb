@@ -30,9 +30,7 @@ var pyWeb = {
     // the buffered lines, and only actually do it when at zero.
     BUFFERED_LINES_REMOVED: 0,
 
-    __delay__: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
-
-    version: () => '0.0.1',
+    version: () => '0.0.2',
 
     loadPackage: (packageName) => {
         /* Lock the console while loading a package into the virtual filesystem.
@@ -343,6 +341,16 @@ var pyWeb = {
 
             // True to display "loading python" and "python loaded" in terminal.
             display_loading_python: true,
+
+            // Whether to display a console and/or terminal error (that is,
+            // red text) message when input is provided while the console
+            // is locked. Note that The console is usually locked because of
+            // package loading, so REDIRECTCONSOLE is
+            // probably on, so printing a console message will probably also
+            // display a message in the terminal.
+            display_locked_console_log: false,
+            display_locked_terminal_error: true,
+
         }
 
         // Check that provided options are valid.
@@ -356,19 +364,9 @@ var pyWeb = {
         // update the defaults with the provided options.
         pyWeb.options = Object.assign(default_options, options);
 
-        async function pushCode(line) {
+        function pushCode(line) {
             // Handle a line being entered in the terminal.
-            
-            // Wait for LOCK_TERMINAL to be cleared.
-            while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
-            
             pyodide.globals._push(line);
-            
-            // Wait for LOCK_TERMINAL to be cleared.
-            // Calling _push may have caused python to run code which may
-            // have set the LOCK_TERMINAL flag.
-            while (pyWeb.LOCK_TERMINAL) {await pyWeb.__delay__(1)}
-            
             pyWeb.MAYBE_RUN = true;  // Default back to true.
         }
 
@@ -388,7 +386,21 @@ var pyWeb = {
                     "SHIFT+ENTER": pyWeb._shift_enter,
                     "BACKSPACE": pyWeb._backspace,
                     "CTRL+C": pyWeb._ctrl_c,
-                }
+                },
+                onBeforeCommand: () => {
+                    // Opportunity to make console ignore input.
+                    if (pyWeb.LOCK_TERMINAL) {
+                        let msg = 'Terminal is locked and can not be used.'
+                        if (pyWeb.options.display_locked_console_log) {
+                            console.log(msg)
+                        }
+                        if (pyWeb.options.display_locked_terminal_error) {
+                            pyWeb.term.error(msg)
+                        }
+                    }
+                    // False (meaning ignore input) if console is locked.
+                    return !pyWeb.LOCK_TERMINAL
+                },
             }
         );
         pyWeb.term = term;
