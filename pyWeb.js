@@ -17,9 +17,6 @@ var pyWeb = {
     
     // If false the buffer will not be executed when pressing enter.
     MAYBE_RUN: true,
-    
-    // True to redirect javascript console log/error to terminal.
-    REDIRECTCONSOLE: false,
 
     // Set to true when pyWeb is initialized with a call to new().
     // Used so that subsequent calls to new() do not reinitialize
@@ -62,23 +59,28 @@ var pyWeb = {
             Promise: resolved after package files are loaded.
         */
 
+        let messageCallback = (r) => {
+            pyWeb._removeBufferedLines();
+            pyWeb.term.echoRaw(r);
+            pyWeb._restoreBufferedLines();
+        }
+
+        let errorCallback = (r) => {
+            pyWeb._removeBufferedLines();
+            pyWeb.term.error(r);
+            pyWeb._restoreBufferedLines();
+        }
+
         // Load package into virtual filesystem and lock the console.
         pyWeb.LOCK_TERMINAL = true;
-        pyWeb.REDIRECTCONSOLE = true;  // Display info/errors for user.
-        return pyodide.loadPackage(packageName).then(
+        return pyodide.loadPackage(packageName, messageCallback, errorCallback).then(
             (r) => {
                 pyWeb.LOCK_TERMINAL = false;
-                pyWeb.REDIRECTCONSOLE = false;
-                pyWeb._removeBufferedLines();
-                pyWeb.term.echoRaw(r);
-                pyWeb._restoreBufferedLines();
+                if (r) {messageCallback(r)}
             },
             (r) => {
                 pyWeb.LOCK_TERMINAL = false;
-                pyWeb.REDIRECTCONSOLE = false;
-                pyWeb._removeBufferedLines();
-                pyWeb.term.error(r);
-                pyWeb._restoreBufferedLines();
+                if (r) {errorCallback(r)}
             }
         );
     },
@@ -344,10 +346,7 @@ var pyWeb = {
 
             // Whether to display a console and/or terminal error (that is,
             // red text) message when input is provided while the console
-            // is locked. Note that The console is usually locked because of
-            // package loading, so REDIRECTCONSOLE is
-            // probably on, so printing a console message will probably also
-            // display a message in the terminal.
+            // is locked.
             display_locked_console_log: false,
             display_locked_terminal_error: true,
 
@@ -441,30 +440,6 @@ var pyWeb = {
             term.update(lineno, line);
         };
 
-        (function(){
-            // Override console.log and console.error to add terminal 
-            // echo/error to it.
-            // https://stackoverflow.com/a/11403146/8899565
-            let oldLog = console.log;
-            let oldError = console.error;
-            console.log = function (message) {
-                if (pyWeb.REDIRECTCONSOLE) {
-                    pyWeb._removeBufferedLines();
-                    pyWeb.term.echoRaw(message)
-                    pyWeb._restoreBufferedLines();
-                }
-                oldLog.apply(console, arguments);
-            };
-            console.error = function (message) {
-                if (pyWeb.REDIRECTCONSOLE) {
-                    pyWeb._removeBufferedLines();
-                    pyWeb.term.error(message)
-                    pyWeb._restoreBufferedLines();
-                }
-                oldError.apply(console, arguments);
-            };
-        })();
-
         let pyodidePromise;
         if (pyWeb.ALREADY_INIT) {
             console.log('not calling languagePluginLoader again.')
@@ -506,12 +481,7 @@ var pyWeb = {
                         # super().write(data, *args, **kwargs)
                         self.line_buffer += data
                         if js.pyWeb.options.print_to_js_console:
-                            # disable REDIRECTCONSOLE while logging to console
-                            # to prevent double print in the python terminal.
-                            old_REDIRECTCONSOLE = pyWeb.REDIRECTCONSOLE
-                            pyWeb.REDIRECTCONSOLE = False;
                             console.log(data)
-                            pyWeb.REDIRECTCONSOLE = old_REDIRECTCONSOLE;
                     def display(self):
                         if self.line_buffer:
                             pyWeb.term.echoRaw(self.line_buffer)
