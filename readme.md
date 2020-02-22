@@ -12,6 +12,7 @@ pyWeb provides a terminal front-end for [Pyodide](https://github.com/iodide-proj
  - [Overview](https://jurasofish.github.io/pyweb/)
  - [Loading packages (numpy, pandas, etc.)](https://jurasofish.github.io/pyweb/demos/loading_packages.html)
  - [Using matplotlib](https://jurasofish.github.io/pyweb/demos/plotting_matplotlib.html)
+ - [Files and filesystem](https://jurasofish.github.io/pyweb/demos/filesystem.html)
  - [Minimal usage](https://jurasofish.github.io/pyweb/demos/minimal.html)
 
 ## Guide
