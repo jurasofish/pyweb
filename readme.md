@@ -408,6 +408,9 @@ Busy sleep for dt seconds (while consuming cpu).
 
 ## Changelog
 
+### unreleased
+ - Typo in browser version note
+
 ### 0.0.2
  - Change behaviour of terminal locking to fix pasting.
 

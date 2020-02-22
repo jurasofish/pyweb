@@ -420,7 +420,7 @@ var pyWeb = {
         }
             
         if (pyWeb.options.display_browser_version_note) {
-            term.error('Please note that pyWweb/pyodide only works on Chrome and '
+            term.error('Please note that pyWeb/pyodide only works on Chrome and '
                      + 'Firefox desktop, and probably Firefox Android. '
                      + 'An incompatible browser will likely hang at '
                      + '"Loading Python..."\n');
