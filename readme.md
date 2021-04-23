@@ -21,7 +21,7 @@ pyWeb provides a terminal front-end for [Pyodide](https://github.com/iodide-proj
 
 The master branch of this repository contains the latest version of pyWeb.js.
 
-To use pyWeb load the prerequisite JavaScript libraries and call `pyWeb.new()`.
+To use pyWeb load the prerequisite JavaScript libraries and call `pyWeb.create()`.
 
 ```html
 <!-- Minial example - full screen pyWeb terminal. -->
@@ -31,12 +31,12 @@ To use pyWeb load the prerequisite JavaScript libraries and call `pyWeb.new()`.
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery.terminal@2.12.0/js/jquery.terminal.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/jquery.terminal@2.12.0/css/jquery.terminal.min.css" rel="stylesheet"/>
-    <script src="https://pyodide.cdn.iodide.io/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.17.0/full/pyodide.js"></script>
     <script src="../pyWeb.js"></script>
     </head>
   <body>
     <script>
-        pyWeb.new()
+        pyWeb.create()
     </script>
   </body>
 </html>
@@ -48,7 +48,7 @@ Or, to attach to an existing div specify it's name.
 <body>
     <div id="myPyWebTerminal"></div>
     <script>
-        pyWeb.new('#myPyWebTerminal')
+        pyWeb.create('#myPyWebTerminal')
     </script>
 </body>
 ```
@@ -130,7 +130,7 @@ You can also load packages from JavaScript and make use of the returned promise 
 // Note here that the Pyodide.loadPackage promise is passed through
 // from JavaScript to Python, and finally to Javascript where we use it.
 
-pyWeb.new().then( () => {
+pyWeb.create().then( () => {
     console.log('pyWeb loaded')
     pyWeb.runCode("pyWeb.loadPackage('numpy')").result.then( () => {
         console.log('numpy loaded');
@@ -142,7 +142,7 @@ pyWeb.new().then( () => {
 To load a package without displaying anything in the pyWeb terminal you can just use the plain `pyodide.loadPackage()`:
 
 ```javascript
-pyWeb.new().then( () => {
+pyWeb.create().then( () => {
     pyodide.loadPackage('numpy').then( () => {
         console.log('numpy loaded silently');
     })
@@ -192,7 +192,7 @@ There are plenty of things that aren't so pleasant in pyWeb.
 
 pyWeb creates a single `pyWeb` global in javascript, along with the `pyodide` global.
 
-### `pyWeb.new(div, [options])`
+### `pyWeb.create(div, [options])`
 ```
 Initialize pyWeb/Pyodide and attach terminal to the specified div.
 Calling this more than once is not well tested, but should reset
@@ -214,7 +214,7 @@ Returns:
     Promise: Resolved once pyWeb is ready to use.
 
 Example:
-    pyWeb.new('#terminal', {print_to_js_console: false})
+    pyWeb.create('#terminal', {print_to_js_console: false})
 
 
 The default options are 

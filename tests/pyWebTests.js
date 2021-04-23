@@ -7,7 +7,7 @@ let newTerminal = async () => {
     termdiv.id = 'terminal' + String(termdivCounter);
     termdivCounter++;
     document.body.appendChild(termdiv);
-    await pyWeb.new('#' + termdiv.id);
+    await pyWeb.create('#' + termdiv.id);
     termdiv.style.border = 10;
     termdiv.style.borderColor = 'white';
 }

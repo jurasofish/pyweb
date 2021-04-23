@@ -5,7 +5,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery.terminal@2.12.0/js/jquery.terminal.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/jquery.terminal@2.12.0/css/jquery.terminal.min.css" rel="stylesheet"/>
-    <script src="https://pyodide.cdn.iodide.io/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.17.0/full/pyodide.js"></script>
     <script src="../pyWeb.js"></script>
 
     <style>
@@ -52,7 +52,7 @@
     </div>
     <script>
         // I hope you like promises xx
-        pyWeb.new('#terminal').then( () => {
+        pyWeb.create('#terminal').then( () => {
             
             pyWeb.runCode('# Start silently loading pytz from Javascript.');
             pyodide.loadPackage('pytz').then( () => {

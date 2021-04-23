@@ -21,11 +21,6 @@ var pyWeb = {
     // True to redirect javascript console log/error to terminal.
     REDIRECTCONSOLE: false,
 
-    // Set to true when pyWeb is initialized with a call to new().
-    // Used so that subsequent calls to new() do not reinitialize
-    // the python runtime.
-    ALREADY_INIT: false,
-
     // Keep track of how many times it has been requested to remove/restore
     // the buffered lines, and only actually do it when at zero.
     BUFFERED_LINES_REMOVED: 0,
@@ -286,7 +281,7 @@ var pyWeb = {
         return false; // Don't run other paste events :)
     },
 
-    new: (div='body', options={}) => {
+    create: async (div='body', options={}) => {
         /* Initialize pyWeb/pyodide and attach terminal to the specified div.
         Calling this more than once is not well tested, but should reset
         the terminal, while leaving the python runtime untouched.
@@ -306,7 +301,7 @@ var pyWeb = {
             Promise: Resolved once pyWeb is ready to use.
         
         Example:
-            pyWeb.new('#terminal', {print_to_js_console: false})
+            pyWeb.create('#terminal', {print_to_js_console: false})
         */
         
         let default_options = {
@@ -465,14 +460,9 @@ var pyWeb = {
             };
         })();
 
-        let pyodidePromise;
-        if (pyWeb.ALREADY_INIT) {
-            console.log('not calling languagePluginLoader again.')
-            pyodidePromise = Promise.resolve();  // empty promise
-        } else {
-            pyWeb.ALREADY_INIT = true;
-
-            pyodidePromise = languagePluginLoader.then(() => {
+            await loadPyodide({
+              indexURL : "https://cdn.jsdelivr.net/pyodide/v0.17.0/full/"
+            });
     
                 pyodide.runPython(String.raw`
                 import io
@@ -674,10 +664,7 @@ var pyWeb = {
                         'exception_string': exc_string,
                     }
                 `)
-            })
-        }
-        pyodidePromise.then(
-            () => {
+
                 if (pyWeb.options.display_loading_python) {
                     term.echo('Python loaded.\n')
                 }
@@ -686,11 +673,6 @@ var pyWeb = {
                     {display_input: false}
                 )
                 pyWeb.LOCK_TERMINAL = false;
-            }, 
-            () => {
-                term.echo('Loading Python failed.')
-            }, 
-        )
-        return pyodidePromise;
+
     }
 }
