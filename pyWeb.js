@@ -78,7 +78,7 @@ var pyWeb = {
         );
     },
 
-    runCode: (code, options={}) => {
+    runCode: async (code, options={}) => {
         /* Run a string of python code in the terminal.
 
         This is intended as an external API to pyWeb, allowing developers
@@ -145,6 +145,7 @@ var pyWeb = {
         }
         
         let exec_info = pyodide.globals._exec_buffer(code, options.display_output)
+        await exec_info.result
         pyWeb._restoreBufferedLines();
         return exec_info;
     },
@@ -625,7 +626,7 @@ var pyWeb = {
             buffer.clear()
             pyWeb.term.set_prompt('>>> ')
             try:
-                res = pyodide.eval_code(code_str, globals())
+                res = pyodide.eval_code_async(code_str, globals())
                 exc = None
                 exc_string = ''
             except Exception as e:
@@ -668,7 +669,7 @@ var pyWeb = {
         if (pyWeb.options.display_loading_python) {
             term.echo('Python loaded.\n')
         }
-        pyWeb.runCode(
+        await pyWeb.runCode(
             `print('Python %s on %s' % (sys.version, sys.platform), end='')`,
             {display_input: false}
         )
